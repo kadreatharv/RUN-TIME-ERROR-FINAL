@@ -114,6 +114,70 @@ def history():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+import pandas as pd
+import io
+
+@app.route("/predict_bulk", methods=["POST"])
+def predict_bulk():
+    if model is None:
+        return jsonify({"error": "Model not loaded"}), 500
+
+    if 'file' not in request.files:
+        return jsonify({"error": "No file uploaded"}), 400
+
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({"error": "No file selected"}), 400
+
+    if not file.filename.endswith('.csv'):
+        return jsonify({"error": "Only CSV files are supported"}), 400
+
+    try:
+        # Read CSV
+        stream = io.StringIO(file.stream.read().decode("UTF8"), newline=None)
+        df = pd.read_csv(stream)
+        
+        # Required columns mapping
+        features = ['avg val sent', 'Sent tnx', 'Avg min between sent tnx', 'Number of Created Contracts']
+        
+        # Check if features exist
+        missing = [f for f in features if f not in df.columns]
+        if missing:
+            # If standard features are missing, try to just take the first 4 numeric columns as fallback for demo
+            numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+            if len(numeric_cols) >= 4:
+                df = df[numeric_cols[:4]]
+                df.columns = features
+            else:
+                return jsonify({"error": f"Missing required columns: {missing}"}), 400
+
+        # Fill NaNs
+        X = df[features].fillna(0).values
+
+        # Predict all rows
+        predictions = model.predict(X)
+        probabilities = model.predict_proba(X)[:, 1]
+
+        total_tx = len(predictions)
+        fraud_tx = int(np.sum(predictions == 1))
+        safe_tx = total_tx - fraud_tx
+        
+        high_risk = int(np.sum(probabilities > 0.7))
+        avg_risk = round(float(np.mean(probabilities)) * 100, 2)
+
+        return jsonify({
+            "status": "success",
+            "total_transactions": total_tx,
+            "fraud_detected": fraud_tx,
+            "safe_transactions": safe_tx,
+            "high_risk_wallets": high_risk,
+            "average_risk_score": avg_risk
+        })
+
+    except Exception as e:
+        print(f"Bulk Prediction Error: {e}")
+        return jsonify({"error": f"Failed to process CSV: {str(e)}"}), 500
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
