@@ -2,32 +2,35 @@ import pandas as pd
 import numpy as np
 import pickle
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split
 
-print("Loading genuine blockchain dataset...")
-# Load genuine data
-data = pd.read_csv("../data/old_data/final_transactions.csv")
+print("Loading Real Ethereum Fraud dataset...")
+data = pd.read_csv("../data/transaction_dataset.csv")
 
-# We will use 5 specific features for the model:
-# 1. amount: Transaction amount
-# 2. hour: Hour of the day (0-23)
-# 3. is_night: Flag if transaction happened at night
-# 4. amount_cat: Categorical representation of amount
-# 5. high_gas: Flag for unusually high gas fees
+# We use 4 real blockchain features that perfectly map to our UI:
+# 1. avg val sent -> Maps to UI "Amount"
+# 2. Sent tnx -> Maps to UI "Transaction Frequency"
+# 3. Avg min between sent tnx -> Maps to UI "Wallet Activity"
+# 4. Number of Created Contracts -> Maps to UI "Complexity Slider"
 
-features = ['amount', 'hour', 'is_night', 'amount_cat', 'high_gas']
+features = [
+    'avg val sent',
+    'Sent tnx',
+    'Avg min between sent tnx',
+    'Number of Created Contracts'
+]
 
-X = data[features]
-y = data['is_fraud']
+# Clean data: Fill missing values with 0
+X = data[features].fillna(0)
+y = data['FLAG']
 
-print(f"Training on {len(X)} transactions...")
+print(f"Training on {len(X)} Real Ethereum transactions...")
 
-# Train model
+# Train model (Random Forest is great for this tabular data)
 model = RandomForestClassifier(n_estimators=100, random_state=42)
 model.fit(X, y)
 
-# Save model
+# Save the real model
 with open("fraud_model.pkl", "wb") as f:
     pickle.dump(model, f)
 
-print("Model trained and saved as fraud_model.pkl!")
+print("Real Ethereum Model trained and saved as fraud_model.pkl!")
