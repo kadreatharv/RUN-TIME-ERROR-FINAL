@@ -75,8 +75,10 @@ function initChart() {
                 borderColor: '#00ff00',
                 backgroundColor: gradient,
                 borderWidth: 3,
-                pointBackgroundColor: [],
-                pointRadius: 0,
+                pointBackgroundColor: '#050505',
+                pointBorderColor: '#00ff00',
+                pointBorderWidth: 2,
+                pointRadius: 4,
                 pointHoverRadius: 7,
                 fill: true,
                 tension: 0.4,
@@ -131,6 +133,10 @@ async function fetchDashboardData() {
             const recent = history.slice(-sliceCount);
             trafficChart.data.labels = recent.map(t => t.timestamp.split(" ")[1]);
             trafficChart.data.datasets[0].data = recent.map(t => t.probability);
+            
+            // Set dynamic border colors for the black dots
+            trafficChart.data.datasets[0].pointBorderColor = recent.map(t => t.prediction === "Fraud" ? '#ff3333' : '#00ff00');
+            trafficChart.data.datasets[0].pointRadius = recent.map(t => t.prediction === "Fraud" ? 5 : 4);
             
             // Check latest risk
             const latestRisk = recent[recent.length-1].probability;

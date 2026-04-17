@@ -228,15 +228,29 @@ body {
     border-left: 4px solid var(--neon-green);
     box-shadow: inset 0 0 30px rgba(0, 255, 0, 0.05);
 }
+.metric-box.border-green:hover {
+    background: rgba(0, 255, 0, 0.05);
+    box-shadow: inset 0 0 50px rgba(0, 255, 0, 0.1);
+}
+
 .metric-box.border-red { 
     border: 1px solid rgba(255, 51, 51, 0.15);
     border-left: 4px solid var(--neon-red);
     box-shadow: inset 0 0 30px rgba(255, 51, 51, 0.05);
 }
+.metric-box.border-red:hover {
+    background: rgba(255, 51, 51, 0.05);
+    box-shadow: inset 0 0 50px rgba(255, 51, 51, 0.1);
+}
+
 .metric-box.border-yellow { 
     border: 1px solid rgba(255, 204, 0, 0.15);
     border-left: 4px solid var(--neon-yellow);
     box-shadow: inset 0 0 30px rgba(255, 204, 0, 0.05);
+}
+.metric-box.border-yellow:hover {
+    background: rgba(255, 204, 0, 0.05);
+    box-shadow: inset 0 0 50px rgba(255, 204, 0, 0.1);
 }
 
 .metric-title {
@@ -270,6 +284,13 @@ body {
     position: relative;
 }
 
+/* Corner brackets for chart box like the picture */
+.chart-box::before, .chart-box::after {
+    content: ''; position: absolute; width: 15px; height: 15px; border: 2px solid var(--neon-green); pointer-events: none;
+}
+.chart-box::before { top: -1px; left: -1px; border-right: none; border-bottom: none; }
+.chart-box::after { bottom: -1px; right: -1px; border-left: none; border-top: none; }
+
 .box-header {
     padding: 15px;
     border-bottom: 1px solid var(--border-color);
@@ -285,13 +306,23 @@ body {
 
 .chart-filters span {
     margin-left: 10px;
-    padding: 2px 5px;
-    border: 1px solid transparent;
+    padding: 3px 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.chart-filters span:hover {
+    background: rgba(0, 255, 0, 0.1);
+    border-color: rgba(0, 255, 0, 0.3);
+    color: var(--text-bright);
 }
 
 .chart-filters span.active {
     color: var(--neon-green);
     border-color: var(--border-color);
+    background: rgba(0, 255, 0, 0.05);
 }
 
 .chart-container {
