@@ -1,0 +1,23 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Databases
+*.sqlite3
+*.db
+transactions.db
+
+# Large datasets and models (optional but recommended to avoid GitHub 100MB limit issues)
+data/
+# We keep model/fraud_model.pkl if it's small enough, but usually we exclude large datasets.
+# data/creditcard.csv
+
+# Virtual environments
+venv/
+env/
+.env
+
+# OS specific
+.DS_Store
+Thumbs.db
