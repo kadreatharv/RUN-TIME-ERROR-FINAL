@@ -38,7 +38,7 @@
                     <i class="fa-solid fa-cloud-arrow-up"></i> [03] Upload Data
                 </button>
                 <button class="nav-btn" data-target="alerts">
-                    <i class="fa-solid fa-triangle-exclamation"></i> [04] Alerts <span class="alert-badge">3</span>
+                    <i class="fa-solid fa-triangle-exclamation"></i> [04] Alerts <span class="alert-badge" id="alert-badge">3</span>
                 </button>
                 <button class="nav-btn" data-target="network">
                     <i class="fa-solid fa-project-diagram"></i> [05] Network Graph
@@ -242,7 +242,10 @@
                             <p class="text-dim">@ SYSTEM: Loading incident history...</p>
                         </div>
 
-                        <button class="btn-outline mt-20" onclick="document.getElementById('alerts-list').innerHTML='<p class=\'text-green\'>All systems normal. Logs purged.</p>'"><i class="fa-solid fa-trash-can"></i> PURGE LOGS</button>
+                        <div style="display: flex; gap: 15px;">
+                            <button class="btn-outline mt-20" onclick="markAlertsRead()"><i class="fa-solid fa-check-double"></i> MARK AS READ</button>
+                            <button class="btn-outline mt-20 text-red" style="border-color: #440000;" onclick="purgeLogs()"><i class="fa-solid fa-trash-can"></i> PURGE LOGS</button>
+                        </div>
                     </div>
                 </section>
 

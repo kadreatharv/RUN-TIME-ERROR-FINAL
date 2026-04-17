@@ -4,7 +4,10 @@ const BACKEND_URL = "https://run-time-error-final.onrender.com";
 let trafficChart;
 let networkGraph;
 let isBackendConnected = true;
-let currentChartRange = '30D'; // default range
+let currentChartRange = '30D';
+let purgedUpToId = -1;
+let readUpToId = -1;
+let currentMaxId = -1;
 
 document.addEventListener("DOMContentLoaded", () => {
     setupTabs();
@@ -118,6 +121,10 @@ async function fetchDashboardData() {
         
         const data = await response.json();
         const history = data.history.reverse(); // oldest to newest
+        
+        if (history.length > 0) {
+            currentMaxId = Math.max(...history.map(t => t.id || 0));
+        }
 
         const total = history.length;
         const fraud = history.filter(t => t.prediction === "Fraud").length;
@@ -338,19 +345,49 @@ document.getElementById('csv-upload').addEventListener('change', function(e) {
     }
 });
 
+// Alert Controls
+function markAlertsRead() {
+    readUpToId = currentMaxId;
+    const badge = document.getElementById('alert-badge');
+    if(badge) {
+        badge.innerText = '0';
+        badge.style.display = 'none';
+    }
+}
+
+function purgeLogs() {
+    purgedUpToId = currentMaxId;
+    readUpToId = currentMaxId;
+    document.getElementById('alerts-list').innerHTML = '<p class="text-green">> All systems normal. Logs purged.</p>';
+    const badge = document.getElementById('alert-badge');
+    if(badge) {
+        badge.innerText = '0';
+        badge.style.display = 'none';
+    }
+}
+
 // Render Dynamic Alerts
 function renderAlerts(history) {
     const alertsList = document.getElementById("alerts-list");
     // Filter only high risk
-    const frauds = history.filter(t => t.risk_level === "High" || t.prediction === "Fraud");
+    const frauds = history.filter(t => (t.risk_level === "High" || t.prediction === "Fraud") && (t.id || 0) > purgedUpToId);
+    
+    const badge = document.getElementById('alert-badge');
+    const unreadCount = frauds.filter(t => (t.id || 0) > readUpToId).length;
     
     if (frauds.length === 0) {
         alertsList.innerHTML = `<p class="text-green">> NO CRITICAL INCIDENTS DETECTED IN RECENT HISTORY.</p>`;
-        document.querySelector('.alert-badge').innerText = '0';
+        if(badge) {
+            badge.innerText = '0';
+            badge.style.display = 'none';
+        }
         return;
     }
 
-    document.querySelector('.alert-badge').innerText = frauds.length;
+    if(badge) {
+        badge.innerText = unreadCount;
+        badge.style.display = unreadCount > 0 ? 'inline-block' : 'none';
+    }
 
     let html = '';
     // Show top 10 most recent frauds
