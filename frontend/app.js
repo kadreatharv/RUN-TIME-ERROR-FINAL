@@ -1,6 +1,6 @@
 // Configuration
 // UPDATE THIS URL ONCE DEPLOYED TO RENDER
-const BACKEND_URL = "http://localhost:5001"; 
+const BACKEND_URL = "https://run-time-error-final.onrender.com"; 
 
 // Global state
 let pieChart, lineChart;
