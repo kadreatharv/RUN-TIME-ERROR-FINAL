@@ -91,11 +91,11 @@ function initChart() {
             scales: {
                 y: {
                     beginAtZero: true,
-                    grid: { color: 'rgba(0, 255, 0, 0.05)' },
+                    grid: { color: 'rgba(0, 255, 0, 0.15)' },
                     ticks: { color: '#555' }
                 },
                 x: {
-                    grid: { color: 'rgba(0, 255, 0, 0.05)' },
+                    grid: { color: 'rgba(0, 255, 0, 0.15)' },
                     ticks: { color: '#555' }
                 }
             },
