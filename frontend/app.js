@@ -2,6 +2,8 @@
 const BACKEND_URL = "https://run-time-error-final.onrender.com";
 
 let trafficChart;
+let networkGraph;
+let isBackendConnected = true;
 
 document.addEventListener("DOMContentLoaded", () => {
     setupTabs();
@@ -117,8 +119,21 @@ async function fetchDashboardData() {
             trafficChart.update();
         }
 
+        // Render Alerts and Network
+        renderAlerts(history);
+        renderNetworkGraph(history);
+
+        // Clear error state if connected
+        if (!isBackendConnected) {
+            isBackendConnected = true;
+            addLog(`> SYSTEM: Connection to AI.CORE_V2 Restored.`, 'green');
+        }
+
     } catch (error) {
-        addLog(`> ERROR: Failed to sync with backend.`, 'red');
+        if (isBackendConnected) {
+            isBackendConnected = false;
+            addLog(`> ERROR: Failed to sync with backend.`, 'red');
+        }
     }
 }
 
@@ -193,4 +208,144 @@ function addLog(msg, color) {
     
     logBox.appendChild(p);
     logBox.scrollTop = logBox.scrollHeight;
+}
+
+// Bulk Upload Logic
+async function analyzeBulk() {
+    const fileInput = document.getElementById('csv-upload');
+    const resultsDiv = document.getElementById('bulk-results');
+    const reportText = document.getElementById('bulk-report-text');
+
+    if (!fileInput.files || fileInput.files.length === 0) {
+        alert("Please upload a CSV file first.");
+        return;
+    }
+
+    const file = fileInput.files[0];
+    const formData = new FormData();
+    formData.append('file', file);
+
+    reportText.innerHTML = `<p class="text-yellow">> UPLOADING LEDGER TO AI.CORE_V2...</p><p class="text-dim">@ SYSTEM: Please wait while Neural Net processes ${file.name}</p>`;
+    resultsDiv.style.display = 'block';
+
+    try {
+        const response = await fetch(`${BACKEND_URL}/predict_bulk`, {
+            method: 'POST',
+            body: formData
+        });
+
+        const data = await response.json();
+        
+        if (response.ok) {
+            reportText.innerHTML = `
+                <p class="text-green">> BATCH PROCESSING COMPLETE.</p>
+                <p>> TOTAL TRANSACTIONS: ${data.total_transactions}</p>
+                <p class="text-red">> FRAUD DETECTED: ${data.fraud_detected}</p>
+                <p class="text-green">> SAFE TRANSACTIONS: ${data.safe_transactions}</p>
+                <p class="text-yellow">> HIGH RISK WALLETS FOUND: ${data.high_risk_wallets}</p>
+                <p>> AVERAGE RISK SCORE: ${data.average_risk_score}%</p>
+                <br>
+                <p class="text-dim">>> ACTION: Fraudulent signatures added to global blacklist.</p>
+            `;
+            fetchDashboardData();
+        } else {
+            reportText.innerHTML = `<p class="text-red">> ERROR: ${data.error}</p>`;
+        }
+    } catch (err) {
+        reportText.innerHTML = `<p class="text-red">> ERROR: Failed to communicate with backend.</p>`;
+    }
+}
+
+// File Upload visual feedback
+document.getElementById('csv-upload').addEventListener('change', function(e) {
+    if (e.target.files.length > 0) {
+        document.querySelector('.drop-zone h3').innerText = e.target.files[0].name;
+    }
+});
+
+// Render Dynamic Alerts
+function renderAlerts(history) {
+    const alertsList = document.getElementById("alerts-list");
+    // Filter only high risk
+    const frauds = history.filter(t => t.risk_level === "High" || t.prediction === "Fraud");
+    
+    if (frauds.length === 0) {
+        alertsList.innerHTML = `<p class="text-green">> NO CRITICAL INCIDENTS DETECTED IN RECENT HISTORY.</p>`;
+        document.querySelector('.alert-badge').innerText = '0';
+        return;
+    }
+
+    document.querySelector('.alert-badge').innerText = frauds.length;
+
+    let html = '';
+    // Show top 10 most recent frauds
+    [...frauds].reverse().slice(0, 10).forEach(f => {
+        html += `
+        <div class="alert-item alert-high">
+            <div class="alert-indicator"></div>
+            <div class="alert-body">
+                <h4>SUSPICIOUS TRANSACTION DETECTED (Amount: ${f.amount} USD/BTC)</h4>
+                <p>${f.timestamp} | Probability: ${f.probability}% | Status: BLOCKED</p>
+            </div>
+            <div class="alert-tag bg-red">HIGH</div>
+        </div>`;
+    });
+    alertsList.innerHTML = html;
+}
+
+// Render Interactive Network Graph
+function renderNetworkGraph(history) {
+    const container = document.getElementById("mynetwork");
+    if (!container) return;
+
+    // Build nodes and edges
+    let nodes = new vis.DataSet([
+        { id: 'CENTRAL_EXCHANGE', label: 'MAIN EXCHANGE NODE', color: '#00ff00', size: 30 }
+    ]);
+    let edges = new vis.DataSet([]);
+
+    let addedNodes = new Set(['CENTRAL_EXCHANGE']);
+
+    // Show last 20 transactions in graph
+    const recent = history.slice(-20);
+    
+    recent.forEach((t, index) => {
+        const nodeId = `WALLET_${t.id}`;
+        if (!addedNodes.has(nodeId)) {
+            const isFraud = t.prediction === "Fraud";
+            nodes.add({
+                id: nodeId,
+                label: `Tx: ${t.amount}`,
+                color: isFraud ? '#ff0000' : '#00ff00',
+                size: isFraud ? 25 : 15
+            });
+            edges.add({
+                from: 'CENTRAL_EXCHANGE',
+                to: nodeId,
+                color: { color: isFraud ? '#ff0000' : '#00ff00', opacity: 0.6 },
+                width: isFraud ? 3 : 1
+            });
+            addedNodes.add(nodeId);
+        }
+    });
+
+    const data = { nodes: nodes, edges: edges };
+    const options = {
+        nodes: {
+            shape: 'dot',
+            font: { color: '#ffffff', face: 'Share Tech Mono' }
+        },
+        edges: {
+            smooth: true
+        },
+        physics: {
+            barnesHut: { gravitationalConstant: -2000, springLength: 100 }
+        }
+    };
+
+    if (!networkGraph) {
+        networkGraph = new vis.Network(container, data, options);
+    } else {
+        networkGraph.setData(data);
+    }
 }

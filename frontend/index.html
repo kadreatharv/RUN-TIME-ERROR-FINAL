@@ -6,6 +6,8 @@
     <title>BLOCKCHAIN FRAUD DETECTION</title>
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Vis.js for Network Graph -->
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
     <!-- Google Fonts for Monospace Hacker Look -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -203,14 +205,24 @@
                         <div class="box-header text-green">
                             <i class="fa-solid fa-database"></i> INGEST_BULK_DATA
                         </div>
-                        <div class="drop-zone">
+                        <div class="drop-zone" id="drop-zone" onclick="document.getElementById('csv-upload').click()">
                             <i class="fa-solid fa-cloud-arrow-up drop-icon"></i>
-                            <h3>DRAG & DROP BLOCKCHAIN LEDGER</h3>
+                            <h3>CLICK TO UPLOAD BLOCKCHAIN LEDGER</h3>
                             <p>SUPPORTED FORMAT: .CSV ONLY</p>
-                            <button class="btn-outline">BROWSE_FILES</button>
+                            <input type="file" id="csv-upload" accept=".csv" style="display:none;">
                         </div>
-                        <div class="action-right">
-                            <button class="btn-disabled"><i class="fa-solid fa-play"></i> ANALYZE BULK DATA</button>
+                        <div class="action-right mt-20">
+                            <button class="btn-primary" id="analyze-bulk-btn" onclick="analyzeBulk()"><i class="fa-solid fa-play"></i> ANALYZE BULK DATA</button>
+                        </div>
+                        <div class="results-section mt-20" id="bulk-results" style="display:none;">
+                            <div class="expert-system border-box">
+                                <div class="box-header text-green">
+                                    <i class="fa-solid fa-robot"></i> BULK_ANALYSIS_REPORT
+                                </div>
+                                <div class="expert-content" id="bulk-report-text">
+                                    <!-- Dynamic text -->
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -223,43 +235,12 @@
                             <i class="fa-solid fa-bell float-right text-red"></i>
                         </div>
                         
-                        <div class="alert-item alert-high">
-                            <div class="alert-indicator"></div>
-                            <div class="alert-body">
-                                <h4>MASSIVE WALLET DRAIN DETECTED - (POSSIBLE RUG PULL)</h4>
-                                <p>Today, 14:32:01 | Target: 0x8f4d...3b21 | Protocol: ETH</p>
-                            </div>
-                            <div class="alert-tag bg-red">HIGH</div>
+                        <div id="alerts-list">
+                            <!-- Dynamic Alerts will be injected here -->
+                            <p class="text-dim">@ SYSTEM: Loading incident history...</p>
                         </div>
 
-                        <div class="alert-item alert-medium">
-                            <div class="alert-indicator"></div>
-                            <div class="alert-body">
-                                <h4>UNUSUAL FREQUENCY OF MICRO-TRANSFERS (BOT NETWORK)</h4>
-                                <p>Today, 12:15:33 | Target: 0x9c8d...7e6f | Protocol: BTC</p>
-                            </div>
-                            <div class="alert-tag bg-yellow text-black">MEDIUM</div>
-                        </div>
-
-                        <div class="alert-item alert-low">
-                            <div class="alert-indicator"></div>
-                            <div class="alert-body">
-                                <h4>NEW UNKNOWN SMART CONTRACT DEPLOYED LOCALLY</h4>
-                                <p>Yesterday, 09:44:12 | Target: 0x22ab...66ee | Protocol: ETH</p>
-                            </div>
-                            <div class="alert-tag bg-green text-black">LOW</div>
-                        </div>
-
-                        <div class="alert-item alert-resolved">
-                            <div class="alert-indicator"></div>
-                            <div class="alert-body">
-                                <h4>DUMP ATTEMPT PREVENTED - SIGNATURE INVALID</h4>
-                                <p>Yesterday, 02:11:05 | Target: 0x1a2b...9f8e | Protocol: BTC</p>
-                            </div>
-                            <div class="alert-tag bg-dim">RESOLVED</div>
-                        </div>
-
-                        <button class="btn-outline mt-20"><i class="fa-solid fa-trash-can"></i> PURGE LOGS</button>
+                        <button class="btn-outline mt-20" onclick="document.getElementById('alerts-list').innerHTML='<p class=\'text-green\'>All systems normal. Logs purged.</p>'"><i class="fa-solid fa-trash-can"></i> PURGE LOGS</button>
                     </div>
                 </section>
 
@@ -274,22 +255,7 @@
                             </div>
                         </div>
                         <div class="graph-area">
-                            <!-- Visual mock of network graph -->
-                            <div class="mock-graph">
-                                <p class="text-dim">Simulating Network Nodes...</p>
-                                <svg width="100%" height="400" viewBox="0 0 800 400">
-                                    <line x1="200" y1="200" x2="300" y2="150" stroke="#00ff00" stroke-width="1" opacity="0.5"/>
-                                    <line x1="300" y1="150" x2="400" y2="250" stroke="#00ff00" stroke-width="1" opacity="0.5"/>
-                                    <line x1="400" y1="250" x2="500" y2="180" stroke="#ff0000" stroke-width="2" opacity="0.8"/>
-                                    <line x1="500" y1="180" x2="600" y2="300" stroke="#00ff00" stroke-width="1" opacity="0.5"/>
-                                    
-                                    <circle cx="200" cy="200" r="15" fill="#00ff00"/>
-                                    <circle cx="300" cy="150" r="15" fill="#00ff00"/>
-                                    <circle cx="400" cy="250" r="20" fill="#00ff00"/>
-                                    <circle cx="500" cy="180" r="25" fill="#ff0000" stroke="#ff0000" stroke-width="5" stroke-opacity="0.3"/>
-                                    <circle cx="600" cy="300" r="15" fill="#00ff00"/>
-                                </svg>
-                            </div>
+                            <div id="mynetwork" style="width: 100%; height: 400px; background-color: #050505; border: 1px solid #111;"></div>
                         </div>
                     </div>
                 </section>
