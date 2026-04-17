@@ -4,6 +4,7 @@ const BACKEND_URL = "https://run-time-error-final.onrender.com";
 let trafficChart;
 let networkGraph;
 let isBackendConnected = true;
+let currentChartRange = '30D'; // default range
 
 document.addEventListener("DOMContentLoaded", () => {
     setupTabs();
@@ -16,6 +17,19 @@ document.addEventListener("DOMContentLoaded", () => {
     // Slider logic
     document.getElementById('complexity-slider').addEventListener('input', (e) => {
         document.getElementById('slider-val').innerText = e.target.value;
+    });
+
+    // Chart Time Filters logic
+    const filterSpans = document.querySelectorAll('#chart-time-filters span');
+    filterSpans.forEach(span => {
+        span.addEventListener('click', (e) => {
+            // remove active from all
+            filterSpans.forEach(s => s.classList.remove('active'));
+            // add active to clicked
+            e.target.classList.add('active');
+            currentChartRange = e.target.getAttribute('data-range');
+            fetchDashboardData(); // re-render graph immediately
+        });
     });
 });
 
@@ -105,7 +119,11 @@ async function fetchDashboardData() {
 
         // Update Chart
         if (history.length > 0) {
-            const recent = history.slice(-20);
+            let sliceCount = 50; // default 30D (all 50 rows)
+            if (currentChartRange === '24H') sliceCount = 10;
+            if (currentChartRange === '7D') sliceCount = 25;
+            
+            const recent = history.slice(-sliceCount);
             trafficChart.data.labels = recent.map(t => t.timestamp.split(" ")[1]);
             trafficChart.data.datasets[0].data = recent.map(t => t.probability);
             
