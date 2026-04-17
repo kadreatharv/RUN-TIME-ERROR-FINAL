@@ -133,10 +133,13 @@ async function runAnalysis() {
     riskScoreText.innerText = "CALC...";
     aiText.innerHTML = `<p class="text-dim">@ SYSTEM DIAGNOSTIC</p><p class="text-yellow">> COMMUNICATING WITH AI.CORE_V2...</p>`;
     
-    // Simulate exactly 30 features for backend
-    let features = new Array(30).fill(0);
-    features[0] = Date.now() % 100000;
-    features[29] = parseFloat(amount);
+    // Real Ethereum Features: [avg_val_sent, sent_tnx, avg_min_between_sent_tnx, num_created_contracts]
+    const avgValSent = parseFloat(amount);
+    const sentTnx = parseFloat(document.getElementById("tx_freq").value) || 0;
+    const avgMinBetween = parseFloat(document.getElementById("wallet_activity").value) || 5000;
+    const numContracts = parseInt(document.getElementById('complexity-slider').value) || 0;
+
+    let features = [avgValSent, sentTnx, avgMinBetween, numContracts];
 
     try {
         const response = await fetch(`${BACKEND_URL}/predict`, {
