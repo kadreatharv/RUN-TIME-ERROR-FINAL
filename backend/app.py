@@ -50,10 +50,10 @@ def predict():
 
     data = request.json
     try:
-        # Expected input: [amount, hour, is_night, amount_cat, high_gas]
+        # Expected input: [avg_val_sent, sent_tnx, avg_min_between_sent_tnx, num_created_contracts]
         features_list = data.get("features", [])
-        if not features_list or len(features_list) != 5:
-            return jsonify({"error": "Must provide exactly 5 features"}), 400
+        if not features_list or len(features_list) != 4:
+            return jsonify({"error": "Must provide exactly 4 features"}), 400
 
         features = np.array(features_list).reshape(1, -1)
 
