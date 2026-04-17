@@ -327,12 +327,12 @@ body {
 
 .chart-container {
     padding: 20px;
-    height: 300px;
+    height: 450px;
 }
 
 .log-content {
     padding: 15px;
-    height: 300px;
+    height: 450px;
     overflow-y: auto;
     font-size: 0.8rem;
     line-height: 1.8;

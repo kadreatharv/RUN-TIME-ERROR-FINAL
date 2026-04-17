@@ -81,9 +81,11 @@ function initChart() {
                 pointRadius: 4,
                 pointHoverRadius: 7,
                 fill: true,
+                cubicInterpolationMode: 'monotone',
                 tension: 0.4,
                 segment: {
-                    borderColor: ctx => ctx.p0.parsed.y > 50 ? '#ff3333' : '#00ff00'
+                    borderColor: ctx => ctx.p0.parsed.y > 50 ? '#ff3333' : '#00ff00',
+                    backgroundColor: ctx => ctx.p0.parsed.y > 50 ? 'rgba(255, 51, 51, 0.2)' : 'rgba(0, 255, 0, 0.1)'
                 }
             }]
         },
@@ -93,11 +95,11 @@ function initChart() {
             scales: {
                 y: {
                     beginAtZero: true,
-                    grid: { color: 'rgba(0, 255, 0, 0.15)' },
+                    grid: { color: 'rgba(0, 255, 0, 0.08)' },
                     ticks: { color: '#555' }
                 },
                 x: {
-                    grid: { color: 'rgba(0, 255, 0, 0.15)' },
+                    grid: { color: 'rgba(0, 255, 0, 0.08)' },
                     ticks: { color: '#555' }
                 }
             },
