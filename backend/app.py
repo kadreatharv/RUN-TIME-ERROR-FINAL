@@ -26,32 +26,42 @@ def get_db_connection():
         return conn
 
 def init_db():
-    conn = get_db_connection()
-    c = conn.cursor()
-    if USE_POSTGRES:
-        c.execute('''
-            CREATE TABLE IF NOT EXISTS history (
-                id SERIAL PRIMARY KEY,
-                timestamp TEXT,
-                amount REAL,
-                prediction TEXT,
-                probability REAL,
-                risk_level TEXT
-            )
-        ''')
-    else:
-        c.execute('''
-            CREATE TABLE IF NOT EXISTS history (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                timestamp TEXT,
-                amount REAL,
-                prediction TEXT,
-                probability REAL,
-                risk_level TEXT
-            )
-        ''')
-    conn.commit()
-    conn.close()
+    global USE_POSTGRES
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        if USE_POSTGRES:
+            c.execute('''
+                CREATE TABLE IF NOT EXISTS history (
+                    id SERIAL PRIMARY KEY,
+                    timestamp TEXT,
+                    amount REAL,
+                    prediction TEXT,
+                    probability REAL,
+                    risk_level TEXT
+                )
+            ''')
+        else:
+            c.execute('''
+                CREATE TABLE IF NOT EXISTS history (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    timestamp TEXT,
+                    amount REAL,
+                    prediction TEXT,
+                    probability REAL,
+                    risk_level TEXT
+                )
+            ''')
+        conn.commit()
+        conn.close()
+        print("Database initialized successfully.")
+    except Exception as e:
+        print(f"CRITICAL ERROR INITIALIZING DATABASE: {e}")
+        if USE_POSTGRES:
+            print("Postgres connection failed! Falling back to SQLite.")
+            USE_POSTGRES = False
+            # Re-run init_db with SQLite
+            init_db()
 
 init_db()
 
