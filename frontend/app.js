@@ -111,10 +111,28 @@ async function fetchDashboardData() {
             
             // Check latest risk
             const latestRisk = recent[recent.length-1].probability;
+            
+            // Update Top Risk Box
+            document.getElementById("threat-score-text").innerText = `THREAT SCORE: ${latestRisk}/100`;
+            const riskLevelText = document.getElementById("risk-level-text");
+            const riskLevelBox = document.getElementById("risk-level-box");
+            const riskBoxContainer = document.getElementById("risk-box-container");
+            
             if (latestRisk > 70) {
                 trafficChart.data.datasets[0].borderColor = '#ff3333';
+                riskLevelText.innerText = "CRITICAL";
+                riskLevelBox.className = "metric-value text-red";
+                riskBoxContainer.className = "metric-box border-red";
+            } else if (latestRisk > 30) {
+                trafficChart.data.datasets[0].borderColor = '#ffff00';
+                riskLevelText.innerText = "ELEVATED";
+                riskLevelBox.className = "metric-value text-yellow";
+                riskBoxContainer.className = "metric-box border-yellow";
             } else {
                 trafficChart.data.datasets[0].borderColor = '#00ff00';
+                riskLevelText.innerText = "NORMAL";
+                riskLevelBox.className = "metric-value text-green";
+                riskBoxContainer.className = "metric-box border-green";
             }
             trafficChart.update();
         }
