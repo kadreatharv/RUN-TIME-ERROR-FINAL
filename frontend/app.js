@@ -273,7 +273,8 @@ function resetForm() {
     document.getElementById('slider-val').innerText = document.getElementById('complexity-slider').value;
     
     const now = new Date();
-    document.getElementById("tx_time").value = now.toISOString().replace('T', ' ').substring(0, 16);
+    const pad = (n) => n.toString().padStart(2, '0');
+    document.getElementById("tx_time").value = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
     
     // Reset output UI
     document.getElementById("risk-score-text").innerText = "0%";
