@@ -3,34 +3,34 @@ import numpy as np
 import pickle
 from sklearn.ensemble import RandomForestClassifier
 
-print("Generating synthetic dataset...")
-# Create synthetic data with 30 features (Time, V1-V28, Amount) + Class
-np.random.seed(42)
-n_samples = 1000
+print("Loading Real Ethereum Fraud dataset...")
+data = pd.read_csv("../data/transaction_dataset.csv")
 
-# Feature columns
-columns = ["Time"] + [f"V{i}" for i in range(1, 29)] + ["Amount", "Class"]
+# We use 4 real blockchain features that perfectly map to our UI:
+# 1. avg val sent -> Maps to UI "Amount"
+# 2. Sent tnx -> Maps to UI "Transaction Frequency"
+# 3. Avg min between sent tnx -> Maps to UI "Wallet Activity"
+# 4. Number of Created Contracts -> Maps to UI "Complexity Slider"
 
-# Generate random data
-data = pd.DataFrame(np.random.randn(n_samples, 31), columns=columns)
+features = [
+    'avg val sent',
+    'Sent tnx',
+    'Avg min between sent tnx',
+    'Number of Created Contracts'
+]
 
-# Make "Class" binary
-data["Class"] = np.random.choice([0, 1], size=n_samples, p=[0.9, 0.1])
+# Clean data: Fill missing values with 0
+X = data[features].fillna(0)
+y = data['FLAG']
 
-# Scale Time and Amount to realistic values
-data["Time"] = np.random.randint(0, 100000, n_samples)
-data["Amount"] = np.abs(data["Amount"]) * 100
+print(f"Training on {len(X)} Real Ethereum transactions...")
 
-# Features & target
-X = data.drop("Class", axis=1)
-y = data["Class"]
-
-# Train model
-model = RandomForestClassifier(n_estimators=50)
+# Train model (Random Forest is great for this tabular data)
+model = RandomForestClassifier(n_estimators=100, random_state=42)
 model.fit(X, y)
 
-# Save model
+# Save the real model
 with open("fraud_model.pkl", "wb") as f:
     pickle.dump(model, f)
 
-print("Model trained!")
+print("Real Ethereum Model trained and saved as fraud_model.pkl!")
