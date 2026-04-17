@@ -91,6 +91,17 @@ body {
     letter-spacing: 2px;
 }
 
+.blinking-cursor {
+    font-weight: bold;
+    color: var(--neon-green);
+    animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
 .sidebar-nav {
     display: flex;
     flex-direction: column;
