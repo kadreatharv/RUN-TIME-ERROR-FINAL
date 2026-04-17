@@ -75,12 +75,13 @@ function initChart() {
                 borderColor: '#00ff00',
                 backgroundColor: gradient,
                 borderWidth: 2,
-                pointBackgroundColor: '#00ff00',
-                pointRadius: 0,
+                pointBackgroundColor: [],
+                pointRadius: [],
+                pointHoverRadius: 7,
                 fill: true,
                 tension: 0.4,
                 segment: {
-                    borderColor: ctx => ctx.p0.parsed.y > 70 ? '#ff3333' : '#00ff00'
+                    borderColor: ctx => ctx.p0.parsed.y > 50 ? '#ff3333' : '#00ff00'
                 }
             }]
         },
@@ -130,6 +131,10 @@ async function fetchDashboardData() {
             const recent = history.slice(-sliceCount);
             trafficChart.data.labels = recent.map(t => t.timestamp.split(" ")[1]);
             trafficChart.data.datasets[0].data = recent.map(t => t.probability);
+            
+            // Highlight fraud points with Red Dots
+            trafficChart.data.datasets[0].pointBackgroundColor = recent.map(t => t.prediction === "Fraud" ? '#ff3333' : '#00ff00');
+            trafficChart.data.datasets[0].pointRadius = recent.map(t => t.prediction === "Fraud" ? 6 : 0);
             
             // Check latest risk
             const latestRisk = recent[recent.length-1].probability;
