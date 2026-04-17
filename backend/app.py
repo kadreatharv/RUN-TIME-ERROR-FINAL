@@ -3,6 +3,8 @@ import sqlite3
 import pickle
 import numpy as np
 import datetime
+import psycopg2
+import psycopg2.extras
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
@@ -11,20 +13,43 @@ CORS(app)
 
 # Database Setup
 DB_FILE = "transactions.db"
+DATABASE_URL = os.environ.get("DATABASE_URL")
+USE_POSTGRES = DATABASE_URL is not None
+
+def get_db_connection():
+    if USE_POSTGRES:
+        conn = psycopg2.connect(DATABASE_URL, sslmode='require')
+        return conn
+    else:
+        conn = sqlite3.connect(DB_FILE)
+        conn.row_factory = sqlite3.Row
+        return conn
 
 def init_db():
-    conn = sqlite3.connect(DB_FILE)
+    conn = get_db_connection()
     c = conn.cursor()
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS history (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT,
-            amount REAL,
-            prediction TEXT,
-            probability REAL,
-            risk_level TEXT
-        )
-    ''')
+    if USE_POSTGRES:
+        c.execute('''
+            CREATE TABLE IF NOT EXISTS history (
+                id SERIAL PRIMARY KEY,
+                timestamp TEXT,
+                amount REAL,
+                prediction TEXT,
+                probability REAL,
+                risk_level TEXT
+            )
+        ''')
+    else:
+        c.execute('''
+            CREATE TABLE IF NOT EXISTS history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp TEXT,
+                amount REAL,
+                prediction TEXT,
+                probability REAL,
+                risk_level TEXT
+            )
+        ''')
     conn.commit()
     conn.close()
 
@@ -79,12 +104,18 @@ def predict():
         amount = features_list[0] # Amount is index 0 now
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        conn = sqlite3.connect(DB_FILE)
+        conn = get_db_connection()
         c = conn.cursor()
-        c.execute('''
-            INSERT INTO history (timestamp, amount, prediction, probability, risk_level)
-            VALUES (?, ?, ?, ?, ?)
-        ''', (timestamp, amount, label, fraud_probability, risk_level))
+        if USE_POSTGRES:
+            c.execute('''
+                INSERT INTO history (timestamp, amount, prediction, probability, risk_level)
+                VALUES (%s, %s, %s, %s, %s)
+            ''', (timestamp, float(amount), label, float(fraud_probability), risk_level))
+        else:
+            c.execute('''
+                INSERT INTO history (timestamp, amount, prediction, probability, risk_level)
+                VALUES (?, ?, ?, ?, ?)
+            ''', (timestamp, float(amount), label, float(fraud_probability), risk_level))
         conn.commit()
         conn.close()
 
@@ -101,10 +132,12 @@ def predict():
 @app.route("/history", methods=["GET"])
 def history():
     try:
-        conn = sqlite3.connect(DB_FILE)
-        conn.row_factory = sqlite3.Row
-        c = conn.cursor()
-        # Get latest 50 transactions
+        conn = get_db_connection()
+        if USE_POSTGRES:
+            c = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        else:
+            c = conn.cursor()
+            
         c.execute('SELECT * FROM history ORDER BY id DESC LIMIT 50')
         rows = c.fetchall()
         conn.close()
