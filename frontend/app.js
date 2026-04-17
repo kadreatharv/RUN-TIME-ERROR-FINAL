@@ -9,6 +9,7 @@ let currentChartRange = '30D'; // default range
 document.addEventListener("DOMContentLoaded", () => {
     setupTabs();
     initChart();
+    resetForm(); // Generate random initial tx details
     
     // Initial fetch for dashboard
     fetchDashboardData();
@@ -77,7 +78,10 @@ function initChart() {
                 pointBackgroundColor: '#00ff00',
                 pointRadius: 0,
                 fill: true,
-                tension: 0.4
+                tension: 0.4,
+                segment: {
+                    borderColor: ctx => ctx.p0.parsed.y > 70 ? '#ff3333' : '#00ff00'
+                }
             }]
         },
         options: {
@@ -137,17 +141,14 @@ async function fetchDashboardData() {
             const riskBoxContainer = document.getElementById("risk-box-container");
             
             if (latestRisk > 70) {
-                trafficChart.data.datasets[0].borderColor = '#ff3333';
                 riskLevelText.innerText = "CRITICAL";
                 riskLevelBox.className = "metric-value text-red";
                 riskBoxContainer.className = "metric-box border-red";
             } else if (latestRisk > 30) {
-                trafficChart.data.datasets[0].borderColor = '#ffff00';
                 riskLevelText.innerText = "ELEVATED";
                 riskLevelBox.className = "metric-value text-yellow";
                 riskBoxContainer.className = "metric-box border-yellow";
             } else {
-                trafficChart.data.datasets[0].borderColor = '#00ff00';
                 riskLevelText.innerText = "NORMAL";
                 riskLevelBox.className = "metric-value text-green";
                 riskBoxContainer.className = "metric-box border-green";
@@ -244,6 +245,33 @@ function addLog(msg, color) {
     
     logBox.appendChild(p);
     logBox.scrollTop = logBox.scrollHeight;
+}
+
+// Generate Random Tx Details for UI
+function resetForm() {
+    const chars = 'abcdef0123456789';
+    const randomHex = (len) => [...Array(len)].map(() => chars[Math.floor(Math.random() * chars.length)]).join('');
+    
+    document.getElementById("tx_hash").value = "tx_" + randomHex(12);
+    document.getElementById("tx_sender").value = "0x" + randomHex(40);
+    document.getElementById("tx_receiver").value = "0x" + randomHex(40);
+    
+    // Set random amounts and metrics for next analysis
+    document.getElementById("tx_amount").value = (Math.random() * 5000).toFixed(2);
+    document.getElementById("tx_freq").value = Math.floor(Math.random() * 5) + 1;
+    document.getElementById('complexity-slider').value = Math.floor(Math.random() * 10) + 1;
+    document.getElementById('slider-val').innerText = document.getElementById('complexity-slider').value;
+    
+    const now = new Date();
+    document.getElementById("tx_time").value = now.toISOString().replace('T', ' ').substring(0, 16);
+    
+    // Reset output UI
+    document.getElementById("risk-score-text").innerText = "0%";
+    document.getElementById("risk-circle").className = "risk-circle";
+    document.getElementById("ai-expert-text").innerHTML = `
+        <p class="text-dim">@ SYSTEM DIAGNOSTIC</p>
+        <p>AWAITING TRANSACTION INPUT FOR ANALYSIS...</p>
+    `;
 }
 
 // Bulk Upload Logic
