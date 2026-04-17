@@ -78,7 +78,7 @@ function initChart() {
                 pointBackgroundColor: '#050505',
                 pointBorderColor: '#00ff00',
                 pointBorderWidth: 2,
-                pointRadius: 4,
+                pointRadius: 0,
                 pointHoverRadius: 7,
                 fill: true,
                 cubicInterpolationMode: 'monotone',
@@ -136,9 +136,10 @@ async function fetchDashboardData() {
             trafficChart.data.labels = recent.map(t => t.timestamp.split(" ")[1]);
             trafficChart.data.datasets[0].data = recent.map(t => t.probability);
             
-            // Set dynamic border colors for the black dots
+            // Set dynamic border colors for the black dots (visible only on hover)
             trafficChart.data.datasets[0].pointBorderColor = recent.map(t => t.prediction === "Fraud" ? '#ff3333' : '#00ff00');
-            trafficChart.data.datasets[0].pointRadius = recent.map(t => t.prediction === "Fraud" ? 5 : 4);
+            trafficChart.data.datasets[0].pointRadius = 0;
+            trafficChart.data.datasets[0].pointHoverRadius = 7;
             
             // Check latest risk
             const latestRisk = recent[recent.length-1].probability;
