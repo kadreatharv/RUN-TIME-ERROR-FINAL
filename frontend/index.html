@@ -66,15 +66,33 @@
             text-transform: uppercase;
             opacity: 0.8;
             margin-bottom: 0.5rem;
+            animation: breathe 2s infinite ease-in-out;
+        }
+
+        @keyframes breathe {
+            0%, 100% { opacity: 0.4; text-shadow: 0 0 2px transparent; }
+            50% { opacity: 1; text-shadow: 0 0 10px var(--accent-green); }
         }
 
         h1 {
-            font-size: 5rem;
+            font-size: 3rem;
             font-weight: 300;
-            letter-spacing: -2px;
+            letter-spacing: -1px;
             margin: 0;
             color: #ffffff;
             text-shadow: 0 0 40px rgba(255, 255, 255, 0.1);
+            max-width: 900px;
+            min-height: 120px; /* Prevent layout shift while typing */
+        }
+        
+        .cursor-blink {
+            border-right: 4px solid var(--accent-green);
+            animation: blink 0.7s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 100% { border-color: transparent; }
+            50% { border-color: var(--accent-green); }
         }
 
         .divider {
@@ -87,43 +105,11 @@
 
         .subtitle {
             color: var(--text-dim);
-            font-size: 1.25rem;
+            font-size: 1.1rem;
             font-weight: 300;
-            max-width: 600px;
+            max-width: 700px;
             letter-spacing: 0.5px;
             line-height: 1.6;
-        }
-
-        .feature-tags {
-            display: flex;
-            gap: 1.5rem;
-            margin-top: 0.5rem;
-            font-family: 'Share Tech Mono', monospace;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        .tag {
-            color: var(--accent-green);
-            font-size: 0.85rem;
-            border: 1px solid rgba(0, 255, 0, 0.2);
-            padding: 8px 15px;
-            background: rgba(0, 255, 0, 0.02);
-            border-radius: 4px;
-            box-shadow: 0 0 10px rgba(0,255,0,0.02);
-            transition: all 0.3s ease;
-            letter-spacing: 1px;
-        }
-
-        .tag i {
-            margin-right: 5px;
-        }
-
-        .tag:hover {
-            background: rgba(0, 255, 0, 0.08);
-            border-color: rgba(0, 255, 0, 0.5);
-            box-shadow: 0 0 15px rgba(0,255,0,0.1);
-            transform: translateY(-2px);
         }
 
         .launch-btn {
@@ -178,19 +164,14 @@
     <div class="content-wrapper">
         <div class="badge">SYS.ONLINE</div>
         
-        <h1>RunTime Error</h1>
+        <h1 id="main-title"></h1>
         
         <div class="divider"></div>
         
         <p class="subtitle">
-            AI-Powered Fraud Detection in Blockchain Transactions
+            <strong>Project: RunTime Error</strong><br>
+            A high-performance system designed to secure Web3 infrastructure using real-time mempool monitoring and heuristic pattern matching to detect zero-day vulnerabilities before they hit the ledger.
         </p>
-
-        <div class="feature-tags">
-            <span class="tag">[ <i class="fa-solid fa-network-wired"></i> Mempool Monitoring ]</span>
-            <span class="tag">[ <i class="fa-solid fa-brain"></i> Heuristic AI Analysis ]</span>
-            <span class="tag">[ <i class="fa-solid fa-shield-virus"></i> Zero-Day Prevention ]</span>
-        </div>
 
         <a href="dashboard.html" class="launch-btn">
             > LAUNCH SATA CORE _
@@ -198,7 +179,7 @@
     </div>
 
     <div class="footer">
-        Code Shrijan Hackathon 2026
+        Code Srijan Hackathon 2026
     </div>
 
     <script>
@@ -206,9 +187,26 @@
         const glow = document.getElementById('glow');
         
         document.addEventListener('mousemove', (e) => {
-            // Using translate3d for hardware acceleration
             glow.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0)`;
         });
+
+        // Typewriter Effect for Main Title
+        const titleText = "AI-Powered Fraud Detection in Blockchain Transactions";
+        const titleElement = document.getElementById("main-title");
+        let i = 0;
+        
+        function typeWriter() {
+            if (i < titleText.length) {
+                titleElement.innerHTML = titleText.substring(0, i + 1) + '<span class="cursor-blink"></span>';
+                i++;
+                setTimeout(typeWriter, 50); // Typing speed
+            } else {
+                titleElement.innerHTML = titleText; // Remove cursor when done
+            }
+        }
+        
+        // Start typing after fade-in
+        setTimeout(typeWriter, 500);
     </script>
 </body>
 </html>
