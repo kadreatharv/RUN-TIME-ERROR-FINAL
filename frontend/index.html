@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RunTime Error // SATA</title>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
             --bg-color: #050505;
@@ -93,6 +94,38 @@
             line-height: 1.6;
         }
 
+        .feature-tags {
+            display: flex;
+            gap: 1.5rem;
+            margin-top: 0.5rem;
+            font-family: 'Share Tech Mono', monospace;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .tag {
+            color: var(--accent-green);
+            font-size: 0.85rem;
+            border: 1px solid rgba(0, 255, 0, 0.2);
+            padding: 8px 15px;
+            background: rgba(0, 255, 0, 0.02);
+            border-radius: 4px;
+            box-shadow: 0 0 10px rgba(0,255,0,0.02);
+            transition: all 0.3s ease;
+            letter-spacing: 1px;
+        }
+
+        .tag i {
+            margin-right: 5px;
+        }
+
+        .tag:hover {
+            background: rgba(0, 255, 0, 0.08);
+            border-color: rgba(0, 255, 0, 0.5);
+            box-shadow: 0 0 15px rgba(0,255,0,0.1);
+            transform: translateY(-2px);
+        }
+
         .launch-btn {
             margin-top: 2.5rem;
             padding: 1.2rem 3rem;
@@ -153,13 +186,19 @@
             AI-Powered Fraud Detection in Blockchain Transactions
         </p>
 
+        <div class="feature-tags">
+            <span class="tag">[ <i class="fa-solid fa-network-wired"></i> Mempool Monitoring ]</span>
+            <span class="tag">[ <i class="fa-solid fa-brain"></i> Heuristic AI Analysis ]</span>
+            <span class="tag">[ <i class="fa-solid fa-shield-virus"></i> Zero-Day Prevention ]</span>
+        </div>
+
         <a href="dashboard.html" class="launch-btn">
             > LAUNCH SATA CORE _
         </a>
     </div>
 
     <div class="footer">
-        Code Srijan Hackathon 2026
+        Code Shrijan Hackathon 2026
     </div>
 
     <script>
