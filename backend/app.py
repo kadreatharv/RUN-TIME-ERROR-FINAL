@@ -150,10 +150,22 @@ def history():
             
         c.execute('SELECT * FROM history ORDER BY id DESC LIMIT 50')
         rows = c.fetchall()
+        
+        # Get actual total counts from entire DB
+        c.execute('SELECT COUNT(*) as total FROM history')
+        total_count = c.fetchone()['total'] if not USE_POSTGRES else c.fetchone()[0]
+        
+        c.execute("SELECT COUNT(*) as fraud FROM history WHERE prediction = 'Fraud'")
+        fraud_count = c.fetchone()['fraud'] if not USE_POSTGRES else c.fetchone()[0]
+        
         conn.close()
         
         history_list = [dict(row) for row in rows]
-        return jsonify({"history": history_list})
+        return jsonify({
+            "history": history_list,
+            "total_count": total_count,
+            "fraud_count": fraud_count
+        })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
