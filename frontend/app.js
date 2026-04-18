@@ -126,8 +126,8 @@ async function fetchDashboardData() {
             currentMaxId = Math.max(...history.map(t => t.id || 0));
         }
 
-        const total = history.length;
-        const fraud = history.filter(t => t.prediction === "Fraud").length;
+        const total = data.total_count || history.length;
+        const fraud = data.fraud_count || 0;
 
         // Update Dashboard Cards
         document.getElementById("total-tx").innerText = total.toLocaleString();
