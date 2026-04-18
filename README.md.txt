@@ -1,0 +1,2 @@
+Run-Time Error is a full-stack intelligent fraud detection platform that combines Machine Learning and Blockchain to identify suspicious financial activities in real time.
+The system uses a Flask-based backend to process incoming transaction data, applies trained ML models for prediction, and leverages blockchain principles to maintain transparency, immutability, and security of records.
