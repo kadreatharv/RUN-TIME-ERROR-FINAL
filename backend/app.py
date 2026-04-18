@@ -143,32 +143,43 @@ def predict():
 def history():
     try:
         conn = get_db_connection()
+        
         if USE_POSTGRES:
             c = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            c.execute('SELECT * FROM history ORDER BY id DESC LIMIT 50')
+            rows = c.fetchall()
+            history_list = [dict(row) for row in rows]
+            
+            # Total count
+            c.execute('SELECT COUNT(*) FROM history')
+            total_count = c.fetchone()['count']
+            
+            # Fraud count (ILIKE works in Postgres)
+            c.execute("SELECT COUNT(*) FROM history WHERE probability >= 50 OR prediction ILIKE 'Fraud'")
+            fraud_count = c.fetchone()['count']
         else:
             c = conn.cursor()
+            c.execute('SELECT * FROM history ORDER BY id DESC LIMIT 50')
+            rows = c.fetchall()
+            history_list = [dict(row) for row in rows]
             
-        c.execute('SELECT * FROM history ORDER BY id DESC LIMIT 50')
-        rows = c.fetchall()
-        
-        # Get actual total counts from entire DB
-        c.execute('SELECT COUNT(*) as total FROM history')
-        total_res = c.fetchone()
-        total_count = total_res['total'] if total_res else 0
-        
-        c.execute("SELECT COUNT(*) as fraud FROM history WHERE prediction = 'Fraud'")
-        fraud_res = c.fetchone()
-        fraud_count = fraud_res['fraud'] if fraud_res else 0
+            # Total count
+            c.execute('SELECT COUNT(*) FROM history')
+            total_count = c.fetchone()[0]
+            
+            # Fraud count (LIKE for SQLite, case-insensitive by default)
+            c.execute("SELECT COUNT(*) FROM history WHERE probability >= 50 OR prediction LIKE 'Fraud'")
+            fraud_count = c.fetchone()[0]
         
         conn.close()
         
-        history_list = [dict(row) for row in rows]
         return jsonify({
             "history": history_list,
             "total_count": total_count,
             "fraud_count": fraud_count
         })
     except Exception as e:
+        print(f"History Error: {e}")
         return jsonify({"error": str(e)}), 500
 
 import pandas as pd
