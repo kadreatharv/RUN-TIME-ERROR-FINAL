@@ -153,10 +153,12 @@ def history():
         
         # Get actual total counts from entire DB
         c.execute('SELECT COUNT(*) as total FROM history')
-        total_count = c.fetchone()['total'] if not USE_POSTGRES else c.fetchone()[0]
+        total_res = c.fetchone()
+        total_count = total_res['total'] if total_res else 0
         
         c.execute("SELECT COUNT(*) as fraud FROM history WHERE prediction = 'Fraud'")
-        fraud_count = c.fetchone()['fraud'] if not USE_POSTGRES else c.fetchone()[0]
+        fraud_res = c.fetchone()
+        fraud_count = fraud_res['fraud'] if fraud_res else 0
         
         conn.close()
         
