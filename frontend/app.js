@@ -461,3 +461,87 @@ function renderNetworkGraph(history) {
         networkGraph.setData(data);
     }
 }
+// ═══════════════════════════════════════════════════════════
+// WALLET SCANNER — ChainGuard AI
+// ═══════════════════════════════════════════════════════════
+
+async function scanWallet() {
+    const address = document.getElementById('scan-address').value.trim();
+    if (!address || !address.startsWith('0x') || address.length !== 42) {
+        alert('Invalid Ethereum address! Must start with 0x and be 42 characters.');
+        return;
+    }
+    document.getElementById('scan-results').style.display = 'none';
+    document.getElementById('scan-loading').style.display = 'block';
+    document.getElementById('scan-btn').disabled          = true;
+    document.getElementById('scan-btn').innerText         = '> SCANNING...';
+    try {
+        const res  = await fetch(`${BACKEND_URL}/scan-wallet`, {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ address })
+        });
+        const data = await res.json();
+        if (!res.ok) { alert('Scan Error: ' + data.error); return; }
+        renderScanResult(data);
+        loadRecentScans();
+    } catch (err) {
+        alert('Connection error — backend unreachable.');
+    } finally {
+        document.getElementById('scan-loading').style.display = 'none';
+        document.getElementById('scan-btn').disabled          = false;
+        document.getElementById('scan-btn').innerHTML         = '<i class="fa-solid fa-magnifying-glass"></i> SCAN WALLET';
+    }
+}
+
+function renderScanResult(data) {
+    document.getElementById('scan-results').style.display = 'block';
+    const circle = document.getElementById('scan-risk-circle');
+    document.getElementById('scan-risk-score').innerText = data.risk_score;
+    circle.className = 'risk-circle';
+    circle.classList.add(data.risk_score >= 40 ? 'high-risk' : 'low-risk');
+    const colors = { CRITICAL: '#ff3333', HIGH: '#ff7700', MEDIUM: '#ffcc00', LOW: '#00ff00' };
+    const col    = colors[data.risk_level] || '#fff';
+    const badge  = document.getElementById('scan-risk-badge');
+    badge.innerText        = data.risk_level;
+    badge.style.color      = col;
+    badge.style.border     = '1px solid ' + col;
+    badge.style.background = col + '11';
+    const flagsDiv = document.getElementById('scan-flags-list');
+    if (data.flags && data.flags.length) {
+        flagsDiv.innerHTML = data.flags.map(function(f) {
+            var good = f.toLowerCase().includes('no major') || f.toLowerCase().includes('safe');
+            return '<p class="' + (good ? 'text-green' : 'text-red') + '">> ' + f + '</p>';
+        }).join('');
+    } else {
+        flagsDiv.innerHTML = '<p class="text-green">> No red flags detected.</p>';
+    }
+    document.getElementById('stat-txcount').innerText = data.tx_count != null ? data.tx_count : '-';
+    document.getElementById('stat-age').innerText     = data.wallet_age_days != null ? data.wallet_age_days + ' days' : '-';
+    document.getElementById('stat-balance').innerText = data.eth_balance != null ? data.eth_balance + ' ETH' : '-';
+    document.getElementById('stat-tokens').innerText  = (data.wallet_data && data.wallet_data.token_tx_count != null) ? data.wallet_data.token_tx_count : '-';
+    document.getElementById('scan-timestamp').innerText = data.scanned_at || '';
+    addLog('> SCAN: ' + data.address.slice(0,10) + '... Risk: ' + data.risk_level + ' (' + data.risk_score + '/100)',
+           data.risk_score >= 40 ? 'red' : 'green');
+}
+
+async function loadRecentScans() {
+    try {
+        const res  = await fetch(BACKEND_URL + '/recent-scans');
+        const data = await res.json();
+        const list = document.getElementById('recent-scans-list');
+        if (!list) return;
+        if (!data.scans || data.scans.length === 0) {
+            list.innerHTML = '<p class="text-dim" style="font-size:0.75rem;">> No recent scans yet.</p>';
+            return;
+        }
+        list.innerHTML = data.scans.slice(0, 5).map(function(s) {
+            var col = (s.risk_level === 'CRITICAL' || s.risk_level === 'HIGH') ? '#ff3333' :
+                       s.risk_level === 'MEDIUM' ? '#ffcc00' : '#00ff00';
+            return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 8px;border-bottom:1px solid #111;font-family:monospace;font-size:0.75rem;cursor:pointer;" onclick="document.getElementById(\'scan-address\').value=\'' + s.address + '\';scanWallet()">' +
+                '<span style="color:#555;">' + s.address.slice(0,14) + '...' + s.address.slice(-6) + '</span>' +
+                '<span style="color:' + col + ';font-weight:bold;">' + s.risk_level + ' (' + s.risk_score + ')</span>' +
+                '<span style="color:#333;">' + (s.timestamp || '') + '</span></div>';
+        }).join('');
+    } catch(e) {}
+}
