@@ -16,10 +16,32 @@ DB_FILE = "transactions.db"
 DATABASE_URL = os.environ.get("DATABASE_URL")
 USE_POSTGRES = DATABASE_URL is not None
 
+# Startup diagnostic log
+print("=" * 60)
+print(f"[STARTUP] DATABASE_URL found: {USE_POSTGRES}")
+if USE_POSTGRES:
+    # Mask password in logs for security
+    safe_url = DATABASE_URL.split("@")[-1] if "@" in DATABASE_URL else "(set)"
+    print(f"[STARTUP] Connecting to Postgres host: {safe_url}")
+else:
+    print("[STARTUP] WARNING: DATABASE_URL not set! Using local SQLite.")
+    print("[STARTUP] WARNING: Data WILL be lost on Render free tier restart!")
+print("=" * 60)
+
 def get_db_connection():
     if USE_POSTGRES:
-        conn = psycopg2.connect(DATABASE_URL, sslmode='require')
-        return conn
+        try:
+            # Use connect_timeout to fail fast if credentials are wrong
+            conn = psycopg2.connect(
+                DATABASE_URL,
+                sslmode='require',
+                connect_timeout=10
+            )
+            return conn
+        except psycopg2.OperationalError as e:
+            print(f"[DB] PostgreSQL connection FAILED: {e}")
+            print("[DB] Check: Is DATABASE_URL correct? Does password contain '@'? Use '%40' instead.")
+            raise
     else:
         conn = sqlite3.connect(DB_FILE)
         conn.row_factory = sqlite3.Row
@@ -41,6 +63,9 @@ def init_db():
                     risk_level TEXT
                 )
             ''')
+            conn.commit()
+            conn.close()
+            print("[DB] PostgreSQL initialized successfully. Data will PERSIST.")
         else:
             c.execute('''
                 CREATE TABLE IF NOT EXISTS history (
@@ -52,16 +77,14 @@ def init_db():
                     risk_level TEXT
                 )
             ''')
-        conn.commit()
-        conn.close()
-        print("Database initialized successfully.")
+            conn.commit()
+            conn.close()
+            print("[DB] SQLite initialized. WARNING: Data is NOT persistent on Render!")
     except Exception as e:
-        print(f"CRITICAL ERROR INITIALIZING DATABASE: {e}")
-        if USE_POSTGRES:
-            print("Postgres connection failed! Falling back to SQLite.")
-            USE_POSTGRES = False
-            # Re-run init_db with SQLite
-            init_db()
+        print(f"[DB] CRITICAL ERROR INITIALIZING DATABASE: {e}")
+        # DO NOT silently fallback to SQLite - raise the error so it's visible
+        # on Render logs. Fix the DATABASE_URL instead.
+        raise RuntimeError(f"Database initialization failed: {e}")
 
 init_db()
 
@@ -77,6 +100,36 @@ except Exception as e:
 @app.route("/")
 def home():
     return jsonify({"status": "Live", "message": "Fraud Detection API Running 🚀"})
+
+@app.route("/db-status", methods=["GET"])
+def db_status():
+    """Health check endpoint to verify database connectivity and persistence."""
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        if USE_POSTGRES:
+            c.execute('SELECT COUNT(*) FROM history')
+            count = c.fetchone()[0]
+            conn.close()
+            return jsonify({
+                "db_type": "PostgreSQL",
+                "persistent": True,
+                "status": "connected",
+                "total_records": count
+            })
+        else:
+            c.execute('SELECT COUNT(*) FROM history')
+            count = c.fetchone()[0]
+            conn.close()
+            return jsonify({
+                "db_type": "SQLite",
+                "persistent": False,
+                "status": "connected",
+                "total_records": count,
+                "warning": "SQLite is NOT persistent on Render! Set DATABASE_URL env var."
+            })
+    except Exception as e:
+        return jsonify({"status": "error", "error": str(e)}), 500
 
 @app.route("/predict", methods=["POST"])
 def predict():
