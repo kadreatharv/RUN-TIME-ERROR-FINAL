@@ -141,7 +141,8 @@ def fetch_etherscan(params):
         data = r.json()
         # Guard: if result is a string error message, return empty
         if isinstance(data.get("result"), str):
-            print(f"[ETHERSCAN] API returned error: {data.get(\"result\", \"\")[:80]}")
+            err_msg = data.get("result", "")[:80]
+            print(f"[ETHERSCAN] API returned error: {err_msg}")
             return {"status": "0", "result": []}
         return data
     except Exception as e:
@@ -437,6 +438,7 @@ def predict_bulk():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
