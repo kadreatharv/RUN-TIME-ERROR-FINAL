@@ -65,7 +65,7 @@ def init_db():
             ''')
             conn.commit()
             conn.close()
-            print("[DB] PostgreSQL initialized successfully. Data will PERSIST.")
+            print("[DB] ✅ PostgreSQL connected! Data WILL persist permanently.")
         else:
             c.execute('''
                 CREATE TABLE IF NOT EXISTS history (
@@ -79,12 +79,27 @@ def init_db():
             ''')
             conn.commit()
             conn.close()
-            print("[DB] SQLite initialized. WARNING: Data is NOT persistent on Render!")
+            print("[DB] ⚠️  SQLite in use. Data is NOT persistent on Render!")
     except Exception as e:
-        print(f"[DB] CRITICAL ERROR INITIALIZING DATABASE: {e}")
-        # DO NOT silently fallback to SQLite - raise the error so it's visible
-        # on Render logs. Fix the DATABASE_URL instead.
-        raise RuntimeError(f"Database initialization failed: {e}")
+        print(f"[DB] ❌ PostgreSQL connection FAILED: {e}")
+        print("[DB] 👉 FIX: If password has '@', encode it as '%40' in DATABASE_URL")
+        print("[DB] 👉 Falling back to SQLite (temporary, data will reset on restart)")
+        USE_POSTGRES = False
+        conn = sqlite3.connect(DB_FILE)
+        conn.row_factory = sqlite3.Row
+        c = conn.cursor()
+        c.execute('''
+            CREATE TABLE IF NOT EXISTS history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp TEXT,
+                amount REAL,
+                prediction TEXT,
+                probability REAL,
+                risk_level TEXT
+            )
+        ''')
+        conn.commit()
+        conn.close()
 
 init_db()
 
