@@ -1,4 +1,4 @@
-// Live Render Backend API
+﻿// Live Render Backend API
 const BACKEND_URL = "https://run-time-error-final.onrender.com";
 
 let trafficChart;
@@ -461,9 +461,9 @@ function renderNetworkGraph(history) {
         networkGraph.setData(data);
     }
 }
-// ═══════════════════════════════════════════════════════════
-// WALLET SCANNER — ChainGuard AI
-// ═══════════════════════════════════════════════════════════
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// WALLET SCANNER â€” ChainGuard AI
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 async function scanWallet() {
     const address = document.getElementById('scan-address').value.trim();
@@ -486,7 +486,7 @@ async function scanWallet() {
         renderScanResult(data);
         loadRecentScans();
     } catch (err) {
-        alert('Connection error — backend unreachable.');
+        alert('Connection error â€” backend unreachable.');
     } finally {
         document.getElementById('scan-loading').style.display = 'none';
         document.getElementById('scan-btn').disabled          = false;
@@ -545,3 +545,4 @@ async function loadRecentScans() {
         }).join('');
     } catch(e) {}
 }
+
