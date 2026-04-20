@@ -135,9 +135,15 @@ KNOWN_SCAM_ADDRESSES = {
 # â”€â”€ Etherscan Helper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 def fetch_etherscan(params):
     params["apikey"] = ETHERSCAN_API_KEY
+    params["chainid"] = 1  # Ethereum mainnet - required for V2 API
     try:
         r = requests.get(ETHERSCAN_BASE, params=params, timeout=10)
-        return r.json()
+        data = r.json()
+        # Guard: if result is a string error message, return empty
+        if isinstance(data.get("result"), str):
+            print(f"[ETHERSCAN] API returned error: {data.get(\"result\", \"\")[:80]}")
+            return {"status": "0", "result": []}
+        return data
     except Exception as e:
         print(f"[ETHERSCAN] Request failed: {e}")
         return {"status": "0", "result": []}
@@ -169,8 +175,9 @@ def calculate_risk_score(address):
                                 "address": address, "startblock": 0,
                                 "endblock": 99999999, "sort": "asc",
                                 "offset": 100, "page": 1})
-    txs      = tx_data.get("result", []) or []
-    tx_count = len(txs) if isinstance(txs, list) else 0
+    raw_txs  = tx_data.get("result", [])
+    txs      = raw_txs if isinstance(raw_txs, list) else []
+    tx_count = len(txs)
     data["tx_count"] = tx_count
 
     wallet_age_days = 0
@@ -267,7 +274,7 @@ def calculate_risk_score(address):
 
 @app.route("/")
 def home():
-    return jsonify({"status": "Live", "message": "ChainGuard AI - Fraud Detection API"})
+    return jsonify({"status": "Live", "message": "SATA_CORE - Fraud Detection API"})
 
 @app.route("/db-status", methods=["GET"])
 def db_status():
@@ -430,5 +437,8 @@ def predict_bulk():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
+
+
 
 
