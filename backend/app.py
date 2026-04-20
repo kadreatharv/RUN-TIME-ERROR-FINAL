@@ -11,36 +11,43 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 
-# Database Setup
+# Database Setup - Using individual params to avoid URL encoding issues
 DB_FILE = "transactions.db"
-DATABASE_URL = os.environ.get("DATABASE_URL")
-USE_POSTGRES = DATABASE_URL is not None
+
+# Individual DB params (preferred - no URL encoding needed for special chars in password)
+DB_HOST = os.environ.get("DB_HOST")
+DB_PORT = os.environ.get("DB_PORT", "5432")
+DB_NAME = os.environ.get("DB_NAME", "postgres")
+DB_USER = os.environ.get("DB_USER")
+DB_PASSWORD = os.environ.get("DB_PASSWORD")
+
+USE_POSTGRES = all([DB_HOST, DB_USER, DB_PASSWORD])
 
 # Startup diagnostic log
 print("=" * 60)
-print(f"[STARTUP] DATABASE_URL found: {USE_POSTGRES}")
 if USE_POSTGRES:
-    # Mask password in logs for security
-    safe_url = DATABASE_URL.split("@")[-1] if "@" in DATABASE_URL else "(set)"
-    print(f"[STARTUP] Connecting to Postgres host: {safe_url}")
+    print(f"[STARTUP] ✅ Postgres params found!")
+    print(f"[STARTUP] Host: {DB_HOST} | Port: {DB_PORT} | User: {DB_USER}")
 else:
-    print("[STARTUP] WARNING: DATABASE_URL not set! Using local SQLite.")
-    print("[STARTUP] WARNING: Data WILL be lost on Render free tier restart!")
+    print("[STARTUP] ⚠️  DB_HOST/DB_USER/DB_PASSWORD not set! Using SQLite.")
+    print("[STARTUP] ⚠️  Data WILL be lost on Render free tier restart!")
 print("=" * 60)
 
 def get_db_connection():
     if USE_POSTGRES:
         try:
-            # Use connect_timeout to fail fast if credentials are wrong
             conn = psycopg2.connect(
-                DATABASE_URL,
+                host=DB_HOST,
+                port=int(DB_PORT),
+                dbname=DB_NAME,
+                user=DB_USER,
+                password=DB_PASSWORD,
                 sslmode='require',
                 connect_timeout=10
             )
             return conn
         except psycopg2.OperationalError as e:
-            print(f"[DB] PostgreSQL connection FAILED: {e}")
-            print("[DB] Check: Is DATABASE_URL correct? Does password contain '@'? Use '%40' instead.")
+            print(f"[DB] ❌ PostgreSQL connection FAILED: {e}")
             raise
     else:
         conn = sqlite3.connect(DB_FILE)
