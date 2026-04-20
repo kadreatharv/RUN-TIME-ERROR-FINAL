@@ -3,137 +3,210 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fintech Fraud Detection</title>
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <!-- Font Awesome -->
+    <title>RunTime Error // SATA</title>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Local Styles -->
-    <link rel="stylesheet" href="style.css">
+    <style>
+        :root {
+            --bg-color: #050505;
+            --text-main: #ffffff;
+            --text-dim: #999999;
+            --accent-green: #00ff00;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Interactive Cursor Glow */
+        .cursor-glow {
+            position: fixed;
+            top: -250px;
+            left: -250px;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(0, 255, 0, 0.08) 0%, rgba(0, 0, 0, 0) 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+            transition: transform 0.15s ease-out;
+        }
+
+        .content-wrapper {
+            z-index: 1;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+            animation: fadeIn 2s ease-out;
+            pointer-events: none; /* Let clicks pass through to button */
+        }
+
+        .badge {
+            font-family: 'Share Tech Mono', monospace;
+            color: var(--accent-green);
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            opacity: 0.8;
+            margin-bottom: 0.5rem;
+            animation: breathe 2s infinite ease-in-out;
+        }
+
+        @keyframes breathe {
+            0%, 100% { opacity: 0.4; text-shadow: 0 0 2px transparent; }
+            50% { opacity: 1; text-shadow: 0 0 10px var(--accent-green); }
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 300;
+            letter-spacing: -1px;
+            margin: 0;
+            color: #ffffff;
+            text-shadow: 0 0 40px rgba(255, 255, 255, 0.1);
+            max-width: 900px;
+            min-height: 120px; /* Prevent layout shift while typing */
+        }
+        
+        .cursor-blink {
+            border-right: 4px solid var(--accent-green);
+            animation: blink 0.7s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 100% { border-color: transparent; }
+            50% { border-color: var(--accent-green); }
+        }
+
+        .divider {
+            width: 40px;
+            height: 2px;
+            background: var(--accent-green);
+            margin: 0.5rem auto;
+            opacity: 0.7;
+        }
+
+        .subtitle {
+            color: var(--text-dim);
+            font-size: 1.1rem;
+            font-weight: 300;
+            max-width: 700px;
+            letter-spacing: 0.5px;
+            line-height: 1.6;
+        }
+
+        .launch-btn {
+            margin-top: 2.5rem;
+            padding: 1.2rem 3rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 100px;
+            color: var(--text-main);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            backdrop-filter: blur(10px);
+            pointer-events: auto; /* Enable clicking */
+        }
+
+        .launch-btn:hover {
+            background: rgba(0, 255, 0, 0.05);
+            border-color: rgba(0, 255, 0, 0.4);
+            color: var(--accent-green);
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .footer {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Share Tech Mono', monospace;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            letter-spacing: 1.5px;
+            opacity: 0.6;
+            z-index: 1;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); filter: blur(5px); }
+            to { opacity: 1; transform: translateY(0); filter: blur(0); }
+        }
+
+    </style>
 </head>
 <body>
-    <div class="app-container">
-        <!-- Sidebar -->
-        <aside class="sidebar glass-panel">
-            <div class="logo">
-                <i class="fa-solid fa-shield-halved"></i>
-                <h2>SecurePay</h2>
-            </div>
-            <nav>
-                <ul>
-                    <li class="active"><i class="fa-solid fa-chart-pie"></i> Dashboard</li>
-                    <li><i class="fa-solid fa-money-bill-transfer"></i> Transactions</li>
-                    <li><i class="fa-solid fa-gear"></i> Settings</li>
-                </ul>
-            </nav>
-            <div class="sidebar-footer">
-                <p>Live API Connection</p>
-                <div class="api-status online"><i class="fa-solid fa-circle"></i> Connected</div>
-            </div>
-        </aside>
-
-        <!-- Main Content -->
-        <main class="main-content">
-            <header>
-                <h1>Fraud Detection Dashboard</h1>
-                <div class="header-right">
-                    <span class="date-display" id="current-date"></span>
-                    <div class="profile-pic">Admin</div>
-                </div>
-            </header>
-
-            <!-- Stats Row -->
-            <section class="stats-grid">
-                <div class="stat-card glass-panel">
-                    <div class="stat-icon"><i class="fa-solid fa-list-check"></i></div>
-                    <div class="stat-info">
-                        <h3>Total Scanned</h3>
-                        <p id="total-count">0</p>
-                    </div>
-                </div>
-                <div class="stat-card glass-panel danger">
-                    <div class="stat-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
-                    <div class="stat-info">
-                        <h3>Fraud Detected</h3>
-                        <p id="fraud-count">0</p>
-                    </div>
-                </div>
-                <div class="stat-card glass-panel success">
-                    <div class="stat-icon"><i class="fa-solid fa-shield-check"></i></div>
-                    <div class="stat-info">
-                        <h3>Safe Transactions</h3>
-                        <p id="safe-count">0</p>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Main Layout: Charts + Form -->
-            <section class="dashboard-layout">
-                
-                <!-- Left: Test Transaction Form -->
-                <div class="test-panel glass-panel">
-                    <div class="panel-header">
-                        <h2><i class="fa-solid fa-flask"></i> Live Test</h2>
-                        <p>Simulate a transaction</p>
-                    </div>
-                    <form id="transaction-form" onsubmit="event.preventDefault(); submitTransaction();">
-                        <div class="form-group">
-                            <label>Amount ($)</label>
-                            <input type="number" id="amount" step="0.01" required placeholder="e.g. 500.00">
-                        </div>
-                        <div class="form-group">
-                            <label>Sender ID</label>
-                            <input type="text" id="sender" required placeholder="e.g. USR-1293">
-                        </div>
-                        <div class="form-group">
-                            <label>Receiver ID</label>
-                            <input type="text" id="receiver" required placeholder="e.g. MER-9421">
-                        </div>
-                        <div class="form-group">
-                            <label>Transaction Type</label>
-                            <select id="activity">
-                                <option value="transfer">Bank Transfer</option>
-                                <option value="purchase">Online Purchase</option>
-                                <option value="crypto">Crypto Exchange</option>
-                            </select>
-                        </div>
-                        <button type="submit" id="submit-btn" class="btn-primary">
-                            <span class="btn-text">Analyze Transaction</span>
-                            <i class="fa-solid fa-spinner fa-spin d-none" id="loading-spinner"></i>
-                        </button>
-                    </form>
-
-                    <!-- Result Box -->
-                    <div id="result-box" class="result-box d-none">
-                        <h3 id="result-prediction">Fraud</h3>
-                        <div class="risk-meter">
-                            <span id="result-risk-level" class="risk-badge">High Risk</span>
-                            <span id="result-probability" class="prob-text">98%</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Right: Charts -->
-                <div class="charts-panel">
-                    <div class="chart-container glass-panel">
-                        <h2>Transaction Status</h2>
-                        <div class="pie-wrapper">
-                            <canvas id="fraudPieChart"></canvas>
-                        </div>
-                    </div>
-                    <div class="chart-container glass-panel">
-                        <h2>Recent Activity</h2>
-                        <div class="line-wrapper">
-                            <canvas id="activityLineChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </section>
-        </main>
-    </div>
+    <!-- Interactive Background -->
+    <div class="cursor-glow" id="glow"></div>
     
-    <script src="app.js"></script>
+    <div class="content-wrapper">
+        <div class="badge">SYS.ONLINE</div>
+        
+        <h1 id="main-title"></h1>
+        
+        <div class="divider"></div>
+        
+        <p class="subtitle">
+            <strong>Run Time Error</strong><br>
+            An AI security system that monitors crypto transactions in real-time to instantly detect and block fraud before it happens.
+        </p>
+
+        <a href="dashboard.html" class="launch-btn">
+            > LAUNCH SATA CORE _
+        </a>
+    </div>
+
+    <div class="footer">
+        Code Srijan Hackathon 2026
+    </div>
+
+    <script>
+        // Smooth cursor tracking glow effect
+        const glow = document.getElementById('glow');
+        
+        document.addEventListener('mousemove', (e) => {
+            glow.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0)`;
+        });
+
+        // Typewriter Effect for Main Title
+        const titleText = "AI-Powered Fraud Detection in Blockchain Transactions";
+        const titleElement = document.getElementById("main-title");
+        let i = 0;
+        
+        function typeWriter() {
+            if (i < titleText.length) {
+                titleElement.innerHTML = titleText.substring(0, i + 1) + '<span class="cursor-blink"></span>';
+                i++;
+                setTimeout(typeWriter, 50); // Typing speed
+            } else {
+                titleElement.innerHTML = titleText; // Remove cursor when done
+            }
+        }
+        
+        // Start typing after fade-in
+        setTimeout(typeWriter, 500);
+    </script>
 </body>
 </html>
