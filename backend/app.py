@@ -1,4 +1,4 @@
-import os
+﻿import os
 import sqlite3
 import pickle
 import numpy as np
@@ -12,7 +12,7 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 
-# ── Database Setup ──────────────────────────────────────────
+# â”€â”€ Database Setup â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 DB_FILE     = "transactions.db"
 DB_HOST     = os.environ.get("DB_HOST")
 DB_PORT     = os.environ.get("DB_PORT", "5432")
@@ -23,7 +23,7 @@ USE_POSTGRES = all([DB_HOST, DB_USER, DB_PASSWORD])
 
 # Etherscan API key (set as ETHERSCAN_API_KEY env var on Render)
 ETHERSCAN_API_KEY = os.environ.get("ETHERSCAN_API_KEY", "")
-ETHERSCAN_BASE    = "https://api.etherscan.io/api"
+ETHERSCAN_BASE    = "https://api.etherscan.io/v2/api"
 
 # Startup diagnostic log
 print("=" * 60)
@@ -37,7 +37,7 @@ else:
     print("[STARTUP] WARNING: ETHERSCAN_API_KEY not set - wallet scan disabled!")
 print("=" * 60)
 
-# ── DB Connection ────────────────────────────────────────────
+# â”€â”€ DB Connection â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 def get_db_connection():
     if USE_POSTGRES:
         try:
@@ -112,7 +112,7 @@ def init_db():
 
 init_db()
 
-# ── Load ML Model ────────────────────────────────────────────
+# â”€â”€ Load ML Model â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 MODEL_PATH = os.path.join(os.path.dirname(__file__), "../model/fraud_model.pkl")
 try:
     with open(MODEL_PATH, "rb") as f:
@@ -122,7 +122,7 @@ except Exception as e:
     print(f"[MODEL] Model not found: {e}")
     model = None
 
-# ── Known Scam Addresses (public blacklist) ───────────────────
+# â”€â”€ Known Scam Addresses (public blacklist) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 KNOWN_SCAM_ADDRESSES = {
     "0xde0b295669a9fd93d5f28d9ec85e40f4cb697bae",
     "0xb3764761e297d6f121e79c32a65829cd1ddb4d32",
@@ -132,7 +132,7 @@ KNOWN_SCAM_ADDRESSES = {
     "0x00000000219ab540356cbb839cbe05303d7705fa",
 }
 
-# ── Etherscan Helper ─────────────────────────────────────────
+# â”€â”€ Etherscan Helper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 def fetch_etherscan(params):
     params["apikey"] = ETHERSCAN_API_KEY
     try:
@@ -142,7 +142,7 @@ def fetch_etherscan(params):
         print(f"[ETHERSCAN] Request failed: {e}")
         return {"status": "0", "result": []}
 
-# ── Risk Scoring Engine (8 signals) ─────────────────────────
+# â”€â”€ Risk Scoring Engine (8 signals) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 def calculate_risk_score(address):
     address = address.lower().strip()
     flags   = []
@@ -157,7 +157,8 @@ def calculate_risk_score(address):
     # Signal 2: ETH Balance
     bal = fetch_etherscan({"module": "account", "action": "balance",
                             "address": address, "tag": "latest"})
-    eth_balance = int(bal.get("result", 0) or 0) / 1e18
+    raw_bal = bal.get("result", 0)
+    eth_balance = (int(raw_bal) / 1e18) if str(raw_bal).lstrip("-").isdigit() else 0
     data["eth_balance"] = round(eth_balance, 4)
     if eth_balance == 0:
         flags.append("Zero ETH balance (wallet drained or unused)")
@@ -260,9 +261,9 @@ def calculate_risk_score(address):
         "scanned_at":     datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
 
-# ═══════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 #  ROUTES
-# ═══════════════════════════════════════════════════════════════
+# â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 @app.route("/")
 def home():
@@ -429,3 +430,5 @@ def predict_bulk():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
+
