@@ -3,6 +3,8 @@ import sqlite3
 import pickle
 import numpy as np
 import datetime
+import psycopg2
+import psycopg2.extras
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
@@ -11,22 +13,93 @@ CORS(app)
 
 # Database Setup
 DB_FILE = "transactions.db"
+DATABASE_URL = os.environ.get("DATABASE_URL")
+USE_POSTGRES = DATABASE_URL is not None
+
+# Startup diagnostic log
+print("=" * 60)
+print(f"[STARTUP] DATABASE_URL found: {USE_POSTGRES}")
+if USE_POSTGRES:
+    # Mask password in logs for security
+    safe_url = DATABASE_URL.split("@")[-1] if "@" in DATABASE_URL else "(set)"
+    print(f"[STARTUP] Connecting to Postgres host: {safe_url}")
+else:
+    print("[STARTUP] WARNING: DATABASE_URL not set! Using local SQLite.")
+    print("[STARTUP] WARNING: Data WILL be lost on Render free tier restart!")
+print("=" * 60)
+
+def get_db_connection():
+    if USE_POSTGRES:
+        try:
+            # Use connect_timeout to fail fast if credentials are wrong
+            conn = psycopg2.connect(
+                DATABASE_URL,
+                sslmode='require',
+                connect_timeout=10
+            )
+            return conn
+        except psycopg2.OperationalError as e:
+            print(f"[DB] PostgreSQL connection FAILED: {e}")
+            print("[DB] Check: Is DATABASE_URL correct? Does password contain '@'? Use '%40' instead.")
+            raise
+    else:
+        conn = sqlite3.connect(DB_FILE)
+        conn.row_factory = sqlite3.Row
+        return conn
 
 def init_db():
-    conn = sqlite3.connect(DB_FILE)
-    c = conn.cursor()
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS history (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT,
-            amount REAL,
-            prediction TEXT,
-            probability REAL,
-            risk_level TEXT
-        )
-    ''')
-    conn.commit()
-    conn.close()
+    global USE_POSTGRES
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        if USE_POSTGRES:
+            c.execute('''
+                CREATE TABLE IF NOT EXISTS history (
+                    id SERIAL PRIMARY KEY,
+                    timestamp TEXT,
+                    amount REAL,
+                    prediction TEXT,
+                    probability REAL,
+                    risk_level TEXT
+                )
+            ''')
+            conn.commit()
+            conn.close()
+            print("[DB] ✅ PostgreSQL connected! Data WILL persist permanently.")
+        else:
+            c.execute('''
+                CREATE TABLE IF NOT EXISTS history (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    timestamp TEXT,
+                    amount REAL,
+                    prediction TEXT,
+                    probability REAL,
+                    risk_level TEXT
+                )
+            ''')
+            conn.commit()
+            conn.close()
+            print("[DB] ⚠️  SQLite in use. Data is NOT persistent on Render!")
+    except Exception as e:
+        print(f"[DB] ❌ PostgreSQL connection FAILED: {e}")
+        print("[DB] 👉 FIX: If password has '@', encode it as '%40' in DATABASE_URL")
+        print("[DB] 👉 Falling back to SQLite (temporary, data will reset on restart)")
+        USE_POSTGRES = False
+        conn = sqlite3.connect(DB_FILE)
+        conn.row_factory = sqlite3.Row
+        c = conn.cursor()
+        c.execute('''
+            CREATE TABLE IF NOT EXISTS history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp TEXT,
+                amount REAL,
+                prediction TEXT,
+                probability REAL,
+                risk_level TEXT
+            )
+        ''')
+        conn.commit()
+        conn.close()
 
 init_db()
 
@@ -43,6 +116,36 @@ except Exception as e:
 def home():
     return jsonify({"status": "Live", "message": "Fraud Detection API Running 🚀"})
 
+@app.route("/db-status", methods=["GET"])
+def db_status():
+    """Health check endpoint to verify database connectivity and persistence."""
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        if USE_POSTGRES:
+            c.execute('SELECT COUNT(*) FROM history')
+            count = c.fetchone()[0]
+            conn.close()
+            return jsonify({
+                "db_type": "PostgreSQL",
+                "persistent": True,
+                "status": "connected",
+                "total_records": count
+            })
+        else:
+            c.execute('SELECT COUNT(*) FROM history')
+            count = c.fetchone()[0]
+            conn.close()
+            return jsonify({
+                "db_type": "SQLite",
+                "persistent": False,
+                "status": "connected",
+                "total_records": count,
+                "warning": "SQLite is NOT persistent on Render! Set DATABASE_URL env var."
+            })
+    except Exception as e:
+        return jsonify({"status": "error", "error": str(e)}), 500
+
 @app.route("/predict", methods=["POST"])
 def predict():
     if model is None:
@@ -50,10 +153,10 @@ def predict():
 
     data = request.json
     try:
-        # Expected input features array
+        # Expected input: [avg_val_sent, sent_tnx, avg_min_between_sent_tnx, num_created_contracts]
         features_list = data.get("features", [])
-        if not features_list or len(features_list) != 30:
-            return jsonify({"error": "Must provide exactly 30 features"}), 400
+        if not features_list or len(features_list) != 4:
+            return jsonify({"error": "Must provide exactly 4 features"}), 400
 
         features = np.array(features_list).reshape(1, -1)
 
@@ -76,16 +179,21 @@ def predict():
             risk_level = "High"
 
         # Log to Database
-        # Extract amount (feature index 29 as per the original frontend)
-        amount = features_list[29]
+        amount = features_list[0] # Amount is index 0 now
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        conn = sqlite3.connect(DB_FILE)
+        conn = get_db_connection()
         c = conn.cursor()
-        c.execute('''
-            INSERT INTO history (timestamp, amount, prediction, probability, risk_level)
-            VALUES (?, ?, ?, ?, ?)
-        ''', (timestamp, amount, label, fraud_probability, risk_level))
+        if USE_POSTGRES:
+            c.execute('''
+                INSERT INTO history (timestamp, amount, prediction, probability, risk_level)
+                VALUES (%s, %s, %s, %s, %s)
+            ''', (timestamp, float(amount), label, float(fraud_probability), risk_level))
+        else:
+            c.execute('''
+                INSERT INTO history (timestamp, amount, prediction, probability, risk_level)
+                VALUES (?, ?, ?, ?, ?)
+            ''', (timestamp, float(amount), label, float(fraud_probability), risk_level))
         conn.commit()
         conn.close()
 
@@ -102,18 +210,109 @@ def predict():
 @app.route("/history", methods=["GET"])
 def history():
     try:
-        conn = sqlite3.connect(DB_FILE)
-        conn.row_factory = sqlite3.Row
-        c = conn.cursor()
-        # Get latest 50 transactions
-        c.execute('SELECT * FROM history ORDER BY id DESC LIMIT 50')
-        rows = c.fetchall()
+        conn = get_db_connection()
+        
+        if USE_POSTGRES:
+            c = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            c.execute('SELECT * FROM history ORDER BY id DESC LIMIT 50')
+            rows = c.fetchall()
+            history_list = [dict(row) for row in rows]
+            
+            # Total count
+            c.execute('SELECT COUNT(*) FROM history')
+            total_count = c.fetchone()['count']
+            
+            # Fraud count (ILIKE works in Postgres)
+            c.execute("SELECT COUNT(*) FROM history WHERE probability >= 50 OR prediction ILIKE 'Fraud'")
+            fraud_count = c.fetchone()['count']
+        else:
+            c = conn.cursor()
+            c.execute('SELECT * FROM history ORDER BY id DESC LIMIT 50')
+            rows = c.fetchall()
+            history_list = [dict(row) for row in rows]
+            
+            # Total count
+            c.execute('SELECT COUNT(*) FROM history')
+            total_count = c.fetchone()[0]
+            
+            # Fraud count (LIKE for SQLite, case-insensitive by default)
+            c.execute("SELECT COUNT(*) FROM history WHERE probability >= 50 OR prediction LIKE 'Fraud'")
+            fraud_count = c.fetchone()[0]
+        
         conn.close()
         
-        history_list = [dict(row) for row in rows]
-        return jsonify({"history": history_list})
+        return jsonify({
+            "history": history_list,
+            "total_count": total_count,
+            "fraud_count": fraud_count
+        })
     except Exception as e:
+        print(f"History Error: {e}")
         return jsonify({"error": str(e)}), 500
+
+import pandas as pd
+import io
+
+@app.route("/predict_bulk", methods=["POST"])
+def predict_bulk():
+    if model is None:
+        return jsonify({"error": "Model not loaded"}), 500
+
+    if 'file' not in request.files:
+        return jsonify({"error": "No file uploaded"}), 400
+
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({"error": "No file selected"}), 400
+
+    if not file.filename.endswith('.csv'):
+        return jsonify({"error": "Only CSV files are supported"}), 400
+
+    try:
+        # Read CSV
+        stream = io.StringIO(file.stream.read().decode("UTF8"), newline=None)
+        df = pd.read_csv(stream)
+        
+        # Required columns mapping
+        features = ['avg val sent', 'Sent tnx', 'Avg min between sent tnx', 'Number of Created Contracts']
+        
+        # Check if features exist
+        missing = [f for f in features if f not in df.columns]
+        if missing:
+            # If standard features are missing, try to just take the first 4 numeric columns as fallback for demo
+            numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+            if len(numeric_cols) >= 4:
+                df = df[numeric_cols[:4]]
+                df.columns = features
+            else:
+                return jsonify({"error": f"Missing required columns: {missing}"}), 400
+
+        # Fill NaNs
+        X = df[features].fillna(0).values
+
+        # Predict all rows
+        predictions = model.predict(X)
+        probabilities = model.predict_proba(X)[:, 1]
+
+        total_tx = len(predictions)
+        fraud_tx = int(np.sum(predictions == 1))
+        safe_tx = total_tx - fraud_tx
+        
+        high_risk = int(np.sum(probabilities > 0.7))
+        avg_risk = round(float(np.mean(probabilities)) * 100, 2)
+
+        return jsonify({
+            "status": "success",
+            "total_transactions": total_tx,
+            "fraud_detected": fraud_tx,
+            "safe_transactions": safe_tx,
+            "high_risk_wallets": high_risk,
+            "average_risk_score": avg_risk
+        })
+
+    except Exception as e:
+        print(f"Bulk Prediction Error: {e}")
+        return jsonify({"error": f"Failed to process CSV: {str(e)}"}), 500
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
