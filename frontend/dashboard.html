@@ -16,6 +16,8 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <!-- Mobile sidebar overlay -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
     <div class="terminal-container">
         <!-- Sidebar -->
         <aside class="sidebar">
@@ -43,6 +45,9 @@
                 <button class="nav-btn" data-target="network">
                     <i class="fa-solid fa-project-diagram"></i> [05] Network Graph
                 </button>
+                <button class="nav-btn" data-target="wallet-scanner" style="border-left: 2px solid #00ff0033; margin-top: 8px;">
+                    <i class="fa-solid fa-shield-halved"></i> [06] Wallet Scanner <span style="color:#00ff00;font-size:0.6rem;vertical-align:middle;">NEW</span>
+                </button>
             </nav>
 
             <div class="sidebar-footer">
@@ -55,9 +60,14 @@
         <!-- Main Content -->
         <main class="main-content">
             <header class="top-header">
-                <div class="title-group">
-                    <h2>BLOCKCHAIN FRAUD DETECTION</h2>
-                    <p>AI.CORE_V2 // ACTIVE MONITORING</p>
+                <div style="display:flex;align-items:center;gap:16px;">
+                    <button class="hamburger-btn" id="hamburger-btn" onclick="toggleSidebar()">
+                        <i class="fa-solid fa-bars"></i> MENU
+                    </button>
+                    <div class="title-group">
+                        <h2>BLOCKCHAIN FRAUD DETECTION</h2>
+                        <p>AI.CORE_V2 // ACTIVE MONITORING</p>
+                    </div>
                 </div>
                 <div class="user-badge">SATA_CORE</div>
             </header>
@@ -261,6 +271,108 @@
                         </div>
                         <div class="graph-area">
                             <div id="mynetwork" style="width: 100%; height: 400px; background-color: #050505; border: 1px solid #111;"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB 6: WALLET SCANNER -->
+                <section id="wallet-scanner" class="tab-content">
+                    <div class="analyze-container border-box" style="border-color:#00ff0033;">
+                        <div class="box-header text-green">
+                            <i class="fa-solid fa-shield-halved"></i> SATA_CORE_WALLET_SCANNER
+                            <span class="float-right" style="color:#00ff0055;font-size:0.7rem;">POWERED BY SATA_CORE AI</span>
+                        </div>
+
+                        <!-- Input -->
+                        <div class="form-section">
+                            <h3 class="section-title">ENTER ETHEREUM WALLET ADDRESS</h3>
+                            <div class="form-row">
+                                <div class="input-group" style="flex:1;">
+                                    <label>WALLET ADDRESS (0x...)</label>
+                                    <input type="text" id="scan-address"
+                                        placeholder="0xABCDEF1234567890..." maxlength="42"
+                                        style="font-family:monospace;letter-spacing:1px;"
+                                        onkeydown="if(event.key==='Enter') scanWallet()">
+                                </div>
+                            </div>
+                            <div class="action-buttons">
+                                <button class="btn-secondary" onclick="document.getElementById('scan-address').value=''">
+                                    <i class="fa-solid fa-rotate-right"></i> CLEAR
+                                </button>
+                                <button class="btn-primary" onclick="scanWallet()" id="scan-btn">
+                                    <i class="fa-solid fa-magnifying-glass"></i> SCAN WALLET
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Results -->
+                        <div id="scan-results" style="display:none;margin-top:20px;">
+                            <div class="results-section" style="align-items:flex-start;gap:24px;flex-wrap:wrap;">
+
+                                <!-- Risk Gauge -->
+                                <div style="display:flex;flex-direction:column;align-items:center;min-width:160px;">
+                                    <div class="risk-circle" id="scan-risk-circle">
+                                        <span id="scan-risk-score">0</span>
+                                    </div>
+                                    <div class="risk-label" style="margin-top:8px;font-size:0.75rem;color:#666;">RISK SCORE /100</div>
+                                    <div id="scan-risk-badge" style="margin-top:10px;padding:4px 16px;border-radius:4px;font-family:monospace;font-size:0.9rem;font-weight:bold;">--</div>
+                                    <!-- Risk Meter Bar -->
+                                    <div class="risk-meter-wrap" style="width:120px;margin-top:14px;">
+                                        <div class="risk-meter-bar" id="scan-meter-bar" style="width:0%;"></div>
+                                    </div>
+                                </div>
+
+                                <!-- Details Panel -->
+                                <div class="expert-system border-box" style="flex:1;min-width:260px;">
+                                    <div class="box-header text-green">
+                                        <i class="fa-solid fa-robot"></i> THREAT_INTELLIGENCE_REPORT
+                                        <span class="float-right" id="scan-timestamp" style="color:#555;font-size:0.7rem;"></span>
+                                    </div>
+                                    <div class="expert-content" id="scan-flags-list">
+                                        <p class="text-dim">Awaiting scan...</p>
+                                    </div>
+                                    <!-- WHY Box -->
+                                    <div class="why-box" id="scan-why-box" style="display:none;margin:0 20px 20px;">
+                                        <div class="why-box-title">⚡ WHY IS THIS RISKY?</div>
+                                        <div id="scan-why-content"></div>
+                                        <div class="detail-chips" id="scan-detail-chips"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Wallet Stats -->
+                            <div class="metrics-row" style="margin-top:16px;" id="scan-stats-row">
+                                <div class="metric-box border-green">
+                                    <div class="metric-title">TOTAL TXs</div>
+                                    <div class="metric-value"><i class="fa-solid fa-right-left"></i> <span id="stat-txcount">-</span></div>
+                                </div>
+                                <div class="metric-box border-yellow">
+                                    <div class="metric-title">WALLET AGE</div>
+                                    <div class="metric-value text-yellow"><i class="fa-regular fa-clock"></i> <span id="stat-age">-</span></div>
+                                </div>
+                                <div class="metric-box border-green">
+                                    <div class="metric-title">ETH BALANCE</div>
+                                    <div class="metric-value"><i class="fa-brands fa-ethereum"></i> <span id="stat-balance">-</span></div>
+                                </div>
+                                <div class="metric-box border-red">
+                                    <div class="metric-title">TOKEN TXs</div>
+                                    <div class="metric-value text-red"><i class="fa-solid fa-coins"></i> <span id="stat-tokens">-</span></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Scanning Animation -->
+                        <div id="scan-loading" style="display:none;text-align:center;padding:40px;">
+                            <div style="font-family:monospace;color:#00ff00;font-size:1rem;animation:breathe 1s infinite;">
+                                > SCANNING BLOCKCHAIN...<br>
+                                <span style="color:#555;font-size:0.8rem;">Querying Etherscan â€¢ Analysing 8 fraud signals â€¢ Building risk profile</span>
+                            </div>
+                        </div>
+
+                        <!-- Recent Scans -->
+                        <div style="margin-top:24px;">
+                            <div class="box-header" style="color:#555;font-size:0.8rem;">RECENT SCANS</div>
+                            <div id="recent-scans-list" style="margin-top:8px;"></div>
                         </div>
                     </div>
                 </section>

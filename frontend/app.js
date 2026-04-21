@@ -461,3 +461,207 @@ function renderNetworkGraph(history) {
         networkGraph.setData(data);
     }
 }
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// WALLET SCANNER â€” ChainGuard AI
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+
+async function scanWallet() {
+    const address = document.getElementById('scan-address').value.trim();
+    if (!address || !address.startsWith('0x') || address.length !== 42) {
+        alert('Invalid Ethereum address! Must start with 0x and be 42 characters.');
+        return;
+    }
+    document.getElementById('scan-results').style.display = 'none';
+    document.getElementById('scan-loading').style.display = 'block';
+    document.getElementById('scan-btn').disabled          = true;
+    document.getElementById('scan-btn').innerText         = '> SCANNING...';
+    try {
+        const res  = await fetch(`${BACKEND_URL}/scan-wallet`, {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ address })
+        });
+        const data = await res.json();
+        if (!res.ok) { alert('Scan Error: ' + data.error); return; }
+        renderScanResult(data);
+        loadRecentScans();
+    } catch (err) {
+        alert('Connection error — backend unreachable.');
+    } finally {
+        document.getElementById('scan-loading').style.display = 'none';
+        document.getElementById('scan-btn').disabled          = false;
+        document.getElementById('scan-btn').innerHTML         = '<i class="fa-solid fa-magnifying-glass"></i> SCAN WALLET';
+    }
+}
+
+function renderScanResult(data) {
+    document.getElementById('scan-results').style.display = 'block';
+
+    // ── Risk Circle ──────────────────────────────────────────
+    const circle = document.getElementById('scan-risk-circle');
+    document.getElementById('scan-risk-score').innerText = data.risk_score;
+    circle.className = 'risk-circle';
+    circle.classList.add(data.risk_score >= 40 ? 'high-risk' : 'low-risk');
+
+    // ── Risk Badge ───────────────────────────────────────────
+    const colors = { CRITICAL: '#ff3333', HIGH: '#ff7700', MEDIUM: '#ffcc00', LOW: '#00ff00' };
+    const col    = colors[data.risk_level] || '#fff';
+    const badge  = document.getElementById('scan-risk-badge');
+    badge.innerText        = data.risk_level;
+    badge.style.color      = col;
+    badge.style.border     = '1px solid ' + col;
+    badge.style.background = col + '11';
+
+    // ── Animated Risk Meter Bar ──────────────────────────────
+    const bar = document.getElementById('scan-meter-bar');
+    const meterColor = data.risk_score >= 70 ? '#ff3333' : data.risk_score >= 40 ? '#ff7700' : data.risk_score >= 20 ? '#ffcc00' : '#00ff00';
+    bar.style.background = meterColor;
+    bar.style.boxShadow  = `0 0 8px ${meterColor}`;
+    setTimeout(() => { bar.style.width = data.risk_score + '%'; }, 100);
+
+    // ── Flag Cards (WHY explanation) ─────────────────────────
+    const flagsDiv = document.getElementById('scan-flags-list');
+    if (data.flags && data.flags.length) {
+        flagsDiv.innerHTML = data.flags.map(function(f, i) {
+            const isOk       = f.toLowerCase().includes('no major') || f.toLowerCase().includes('safe');
+            const isCritical = f.toLowerCase().includes('blacklist') || f.toLowerCase().includes('scam') ||
+                               f.toLowerCase().includes('drainer') || f.toLowerCase().includes('critical');
+            const cls  = isOk ? 'flag-ok' : (isCritical ? 'flag-critical' : 'flag-warning');
+            const icon = isOk ? '✅' : (isCritical ? '🔴' : '⚠️');
+            const lbl  = isOk ? 'SAFE' : (isCritical ? 'CRITICAL RISK' : 'WARNING');
+            return `<div class="flag-card ${cls}" style="animation-delay:${i * 0.07}s">
+                        <div class="flag-icon">${icon}</div>
+                        <div class="flag-text">
+                            <div class="flag-label">${lbl}</div>
+                            <div>${f}</div>
+                        </div>
+                    </div>`;
+        }).join('');
+    } else {
+        flagsDiv.innerHTML = '<div class="flag-card flag-ok"><div class="flag-icon">✅</div><div class="flag-text"><div class="flag-label">SAFE</div><div>No red flags detected — wallet appears clean.</div></div></div>';
+    }
+
+    // ── WHY IS THIS RISKY? box ───────────────────────────────
+    const whyBox     = document.getElementById('scan-why-box');
+    const whyContent = document.getElementById('scan-why-content');
+    const chips      = document.getElementById('scan-detail-chips');
+    whyBox.style.display = 'block';
+
+    const reasons = [];
+    const d = data.wallet_data || {};
+    const flags = data.flags || [];
+
+    // Signal 1: Blacklist
+    if (flags.some(f => f.toLowerCase().includes('blacklist')))
+        reasons.push(`🚫 Address is on a <b>public scam blacklist</b> — associated with confirmed fraud cases.`);
+
+    // Signal 2: Zero balance
+    if (data.eth_balance === 0 || data.eth_balance === '0')
+        reasons.push(`💸 <b>Zero ETH balance</b> — wallet may be drained or a throwaway address.`);
+
+    // Signal 3: Wallet age
+    if (data.wallet_age_days !== undefined && data.wallet_age_days < 7)
+        reasons.push(`🕐 Wallet is only <b>${data.wallet_age_days} day(s) old</b> — brand new wallets carry much higher risk.`);
+    else if (data.wallet_age_days !== undefined && data.wallet_age_days < 30)
+        reasons.push(`🕐 Wallet is <b>${data.wallet_age_days} days old</b> — relatively new, proceed with caution.`);
+
+    // Signal 3: Low tx count
+    if (data.tx_count !== undefined && data.tx_count < 5)
+        reasons.push(`📉 Only <b>${data.tx_count} transaction(s)</b> on-chain — very little history to verify trustworthiness.`);
+
+    // Signal 4: Failed tx ratio
+    if (d.failed_tx_ratio !== undefined && d.failed_tx_ratio > 30)
+        reasons.push(`❌ <b>${d.failed_tx_ratio}% of transactions failed</b> — common pattern in bots and scammers.`);
+
+    // Signal 5: Scam interactions
+    if (flags.some(f => f.toLowerCase().includes('interacted with') && f.toLowerCase().includes('scam')))
+        reasons.push(`🔗 This wallet has <b>interacted with known scam addresses</b> — high contamination risk.`);
+
+    // Signal 6: Drainer pattern
+    if (flags.some(f => f.toLowerCase().includes('drainer')))
+        reasons.push(`🚨 Exhibits a <b>drainer pattern</b> — sends far more than it receives, typical of fund-draining wallets.`);
+
+    // Signal 7: High token activity
+    if (flags.some(f => f.toLowerCase().includes('token activity') || f.toLowerCase().includes('verify approvals')))
+        reasons.push(`🪙 <b>High token activity detected</b> — large number of token transactions. Verify any suspicious approvals; unlimited approvals are a common exploit vector.`);
+
+    // Signal 8: Contract creations
+    if (flags.some(f => f.toLowerCase().includes('created') && f.toLowerCase().includes('contract')))
+        reasons.push(`📝 <b>Multiple contracts deployed</b> from this wallet — verify legitimacy of each contract.`);
+
+    if (reasons.length === 0) {
+        whyContent.innerHTML = '<p style="color:#00ff00;">✅ All 8 risk signals checked — no red flags found. This wallet appears clean.</p>';
+    } else {
+        whyContent.innerHTML = reasons.map(r => `<p style="margin-bottom:8px;">› ${r}</p>`).join('');
+    }
+
+    // ── Detail Chips ─────────────────────────────────────────
+    chips.innerHTML = [
+        { label: 'Sent TXs',     val: d.sent_count     != null ? d.sent_count     : '—' },
+        { label: 'Recv TXs',     val: d.received_count != null ? d.received_count : '—' },
+        { label: 'Contracts',    val: d.contracts_created != null ? d.contracts_created : '—' },
+        { label: 'Token TXs',   val: d.token_tx_count  != null ? d.token_tx_count  : '—' },
+        { label: 'Fail Rate',    val: d.failed_tx_ratio != null ? d.failed_tx_ratio + '%' : '—' },
+    ].map(c => `<div class="chip">${c.label}<span>${c.val}</span></div>`).join('');
+
+    // ── Stat Cards ───────────────────────────────────────────
+    document.getElementById('stat-txcount').innerText = data.tx_count != null ? data.tx_count : '-';
+    document.getElementById('stat-age').innerText     = data.wallet_age_days != null ? data.wallet_age_days + ' days' : '-';
+    document.getElementById('stat-balance').innerText = data.eth_balance != null ? data.eth_balance + ' ETH' : '-';
+    document.getElementById('stat-tokens').innerText  = d.token_tx_count != null ? d.token_tx_count : '-';
+    document.getElementById('scan-timestamp').innerText = data.scanned_at || '';
+
+    addLog('> SCAN: ' + data.address.slice(0,10) + '... Risk: ' + data.risk_level + ' (' + data.risk_score + '/100)',
+           data.risk_score >= 40 ? 'red' : 'green');
+}
+
+async function loadRecentScans() {
+    try {
+        const res  = await fetch(BACKEND_URL + '/recent-scans');
+        const data = await res.json();
+        const list = document.getElementById('recent-scans-list');
+        if (!list) return;
+        if (!data.scans || data.scans.length === 0) {
+            list.innerHTML = '<p class="text-dim" style="font-size:0.75rem;">> No recent scans yet.</p>';
+            return;
+        }
+        list.innerHTML = data.scans.slice(0, 5).map(function(s) {
+            var col = (s.risk_level === 'CRITICAL' || s.risk_level === 'HIGH') ? '#ff3333' :
+                       s.risk_level === 'MEDIUM' ? '#ffcc00' : '#00ff00';
+            return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 8px;border-bottom:1px solid #111;font-family:monospace;font-size:0.75rem;cursor:pointer;" onclick="document.getElementById(\'scan-address\').value=\'' + s.address + '\';scanWallet()">' +
+                '<span style="color:#555;">' + s.address.slice(0,14) + '...' + s.address.slice(-6) + '</span>' +
+                '<span style="color:' + col + ';font-weight:bold;">' + s.risk_level + ' (' + s.risk_score + ')</span>' +
+                '<span style="color:#333;">' + (s.timestamp || '') + '</span></div>';
+        }).join('');
+    } catch(e) {}
+}
+
+// ═══════════════════════════════════════════════════════
+// MOBILE — Hamburger Sidebar Toggle
+// ═══════════════════════════════════════════════════════
+function toggleSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    const isOpen  = sidebar.classList.contains('open');
+    if (isOpen) {
+        sidebar.classList.remove('open');
+        overlay.classList.remove('active');
+    } else {
+        sidebar.classList.add('open');
+        overlay.classList.add('active');
+    }
+}
+
+function closeSidebar() {
+    document.querySelector('.sidebar').classList.remove('open');
+    document.getElementById('sidebar-overlay').classList.remove('active');
+}
+
+// Close sidebar when a nav button is clicked on mobile
+document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        if (window.innerWidth <= 900) closeSidebar();
+    });
+});
+
+
