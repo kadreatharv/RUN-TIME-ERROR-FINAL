@@ -196,7 +196,13 @@ def calculate_risk_score(address):
     tx_data = fetch_etherscan({"module": "account", "action": "txlist",
                                 "address": address, "startblock": 0,
                                 "endblock": 99999999, "sort": "desc",
-                                "offset": 1000, "page": 1})
+                                "offset": 10000, "page": 1})
+    
+    # Signal 7: Token Activity (phishing exposure)
+    tok = fetch_etherscan({"module": "account", "action": "tokentx",
+                            "address": address, "startblock": 0,
+                            "endblock": 99999999, "sort": "desc",
+                            "offset": 10000, "page": 1})
     txs = tx_data.get("result", []) or []
     tx_count = len(txs)
     data["tx_count"] = tx_count

@@ -142,19 +142,6 @@ async function fetchDashboardData() {
         if (history.length > 0) {
             let sliceCount = 50; // default 30D (all 50 rows)
             if (currentChartRange === '24H') sliceCount = 10;
-            if (currentChartRange === '7D') sliceCount = 25;
-            
-            const recent = history.slice(-sliceCount);
-            trafficChart.data.labels = recent.map(t => t.timestamp.split(" ")[1]);
-            trafficChart.data.datasets[0].data = recent.map(t => t.probability);
-            
-            // Set dynamic border colors for the black dots (visible only on hover)
-            trafficChart.data.datasets[0].pointBorderColor = recent.map(t => t.prediction === "Fraud" ? '#ff3333' : '#00ff00');
-            trafficChart.data.datasets[0].pointRadius = 0;
-            trafficChart.data.datasets[0].pointHoverRadius = 7;
-            
-            // Check latest risk
-            const latestRisk = recent[recent.length-1].probability;
             
             // Update Top Risk Box
             document.getElementById("threat-score-text").innerText = `THREAT SCORE: ${latestRisk}/100`;

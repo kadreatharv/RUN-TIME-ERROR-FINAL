@@ -3,28 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BLOCKCHAIN FRAUD DETECTION</title>
+    <title>ChainGuard AI - Dashboard</title>
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Vis.js for Network Graph -->
-    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
-    <!-- Google Fonts for Monospace Hacker Look -->
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <!-- Mobile sidebar overlay -->
     <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
     <div class="terminal-container">
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="logo-area">
                 <div class="terminal-icon">>_</div>
                 <div class="logo-text">
-                    <h1>Run Time Error</h1>
+                    <h1>ChainGuard AI</h1>
                     <span class="sys-status">SYS.ONLINE<span class="blinking-cursor">_</span></span>
                 </div>
             </div>
@@ -34,13 +34,13 @@
                     <i class="fa-regular fa-clock"></i> [01] Dashboard
                 </button>
                 <button class="nav-btn" data-target="analyze">
-                    <i class="fa-solid fa-microscope"></i> [02] Analyze Transaction
+                    <i class="fa-solid fa-microchip"></i> [02] Smart AI Engine
                 </button>
                 <button class="nav-btn" data-target="upload">
                     <i class="fa-solid fa-cloud-arrow-up"></i> [03] Upload Data
                 </button>
                 <button class="nav-btn" data-target="alerts">
-                    <i class="fa-solid fa-triangle-exclamation"></i> [04] Alerts <span class="alert-badge" id="alert-badge">3</span>
+                    <i class="fa-solid fa-triangle-exclamation"></i> [04] Alerts <span class="alert-badge" id="alert-badge">0</span>
                 </button>
                 <button class="nav-btn" data-target="network">
                     <i class="fa-solid fa-project-diagram"></i> [05] Network Graph
@@ -52,7 +52,6 @@
 
             <div class="sidebar-footer">
                 <p>NODE.ID: 0xBF9A</p>
-                <p>PORT: 5000</p>
                 <div class="ip-box">127.0.0.1</div>
             </div>
         </aside>
@@ -66,10 +65,10 @@
                     </button>
                     <div class="title-group">
                         <h2>BLOCKCHAIN FRAUD DETECTION</h2>
-                        <p>AI.CORE_V2 // ACTIVE MONITORING</p>
+                        <p>AI.CORE_V2 // ENSEMBLE_XGB_ACTIVE</p>
                     </div>
                 </div>
-                <div class="user-badge">SATA_CORE</div>
+                <div class="user-badge">SECURE_ACCESS</div>
             </header>
 
             <div class="content-wrapper">
@@ -94,9 +93,9 @@
                         <div class="metric-box border-yellow" id="risk-box-container">
                             <div class="metric-title">LATEST RISK LEVEL</div>
                             <div class="metric-value text-yellow" id="risk-level-box">
-                                <i class="fa-solid fa-shield-halved"></i> <span id="risk-level-text">ELEVATED</span>
+                                <i class="fa-solid fa-shield-halved"></i> <span id="risk-level-text">LOW</span>
                             </div>
-                            <div class="metric-sub" id="threat-score-text">THREAT SCORE: 72/100</div>
+                            <div class="metric-sub" id="threat-score-text">THREAT SCORE: 12/100</div>
                         </div>
                     </div>
 
@@ -120,91 +119,57 @@
                                 <p>> AI_ENGINE: Monitoring mempool...</p>
                                 <p class="text-green">> SYSTEM: Block #1432 parsed.</p>
                                 <p class="text-red">> ALERT: High Gas fee detected.</p>
-                                <p class="text-green">> AI_ENGINE: Transaction verified.</p>
+                                <p class="text-green">> AI_ENGINE: Monitoring active nodes...</p>
                             </div>
                         </div>
                     </div>
                 </section>
 
-                <!-- TAB 2: ANALYZE TRANSACTION -->
+                <!-- TAB 2: SMART AI ENGINE (UPGRADED) -->
                 <section id="analyze" class="tab-content">
-                    <div class="analyze-container border-box">
-                        <div class="box-header text-green">
-                            <i class="fa-solid fa-microchip"></i> DEEP_INSPECTION_MODULE
+                    <div class="analyze-container border-box" style="padding:2rem;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
+                            <h3 class="card-title" style="color:#00ff00;"><span class="text-green">02_</span> ANALYZE_SMART_ENGINE</h3>
+                            <div class="risk-badge" id="ml-badge" style="display:none;font-size:0.7rem;padding:2px 8px;background:#00ff00;color:#000;">AI_VERIFIED</div>
                         </div>
-                        <div class="form-section">
-                            <h3 class="section-title">CORE METRICS</h3>
-                            <div class="form-row">
-                                <div class="input-group">
-                                    <label>TRANSACTION ID (HASH)</label>
-                                    <input type="text" id="tx_hash" value="tx_8a7f3c21" readonly>
-                                </div>
-                                <div class="input-group">
-                                    <label>TIMESTAMP</label>
-                                    <input type="text" id="tx_time" value="15-11-2023 14:32" readonly>
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="input-group">
-                                    <label>AMOUNT (USD/BTC)</label>
-                                    <input type="number" id="tx_amount" value="500.00">
-                                </div>
-                                <div class="input-group">
-                                    <label>TRANSACTION FREQUENCY (24H)</label>
-                                    <input type="number" id="tx_freq" value="1">
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="input-group">
-                                    <label>SENDER WALLET</label>
-                                    <input type="text" id="tx_sender" value="1FfmbHfnpaZjKFvyi1okTjJJusN455paPH">
-                                </div>
-                                <div class="input-group">
-                                    <label>RECEIVER WALLET</label>
-                                    <input type="text" id="tx_receiver" value="1BoatSLRHtKNngkdXEeobR76b53LETtpyT">
-                                </div>
-                            </div>
+                        
+                        <p class="text-dim" style="margin-bottom:1.5rem;font-size:0.9rem;">
+                            Enter address to perform deep behavioral analysis using Ensemble XGBoost + Neural logic (Phase 1.2).
+                        </p>
 
-                            <h3 class="section-title mt-20">ADVANCED HEURISTICS</h3>
-                            <div class="form-row">
-                                <div class="input-group">
-                                    <label>WALLET ACTIVITY LEVEL</label>
-                                    <select class="cyber-select" id="wallet_activity">
-                                        <option value="50000">Low Activity (Dormant)</option>
-                                        <option value="5000">Medium Activity</option>
-                                        <option value="5">High Frequency Trading</option>
-                                    </select>
-                                </div>
-                                <div class="input-group complexity-container">
-                                    <label>TRANSACTION COMPLEXITY: <span id="slider-val" class="text-green">2</span><span class="text-dim">/10</span></label>
-                                    <input type="range" min="1" max="10" value="2" class="cyber-slider" id="complexity-slider">
-                                    <div class="slider-labels">
-                                        <span>Simple</span>
-                                        <span>Highly Obfuscated</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="action-buttons">
-                                <button class="btn-secondary" onclick="resetForm()"><i class="fa-solid fa-rotate-right"></i> RESET</button>
-                                <button class="btn-primary" onclick="runAnalysis()"><i class="fa-solid fa-radar"></i> ANALYZE TRANSACTION</button>
-                            </div>
+                        <div class="form-group" style="margin-bottom:1rem;">
+                            <label style="color:#aaa;font-size:0.7rem;margin-bottom:0.5rem;display:block;">WALLET ADDRESS (SCAN TARGET)</label>
+                            <input type="text" id="ml-address" placeholder="0x..." style="width:100%;padding:12px;background:#050505;border:1px solid #222;color:#00ff00;font-family:monospace;">
                         </div>
 
-                        <div class="results-section">
-                            <div class="risk-circle-container">
-                                <div class="risk-circle" id="risk-circle">
-                                    <span id="risk-score-text">0%</span>
+                        <button id="ml-btn" class="btn-primary" onclick="smartAnalyze()" style="width:100%;margin-top:1rem;padding:12px;cursor:pointer;">
+                            INITIALIZE DEEP SCAN_
+                        </button>
+
+                        <div id="ml-loading" style="display:none;margin-top:1.5rem;text-align:center;">
+                            <p class="text-dim" style="font-size:0.8rem;animation:breathe 1s infinite;">> ENGINE_BOOTING: Extracting 50+ features...</p>
+                        </div>
+
+                        <div id="ml-results" style="display:none;margin-top:2rem;border-top:1px dashed #222;padding-top:1.5rem;">
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+                                <div class="metric-box" style="background:#080808;padding:1rem;border-radius:4px;">
+                                    <label style="font-size:0.6rem;color:#555;">AI CONFIDENCE</label>
+                                    <div id="ml-score" class="text-green" style="font-size:1.5rem;font-weight:bold;">0%</div>
+                                    <div class="risk-meter-wrap" style="height:4px;background:#111;margin-top:5px;border-radius:2px;"><div class="risk-meter-bar" id="ml-meter-bar" style="height:100%;width:0;transition:width 0.5s;"></div></div>
                                 </div>
-                                <div class="risk-label">RISK SCORE</div>
+                                <div class="metric-box" style="background:#080808;padding:1rem;border-radius:4px;">
+                                    <label style="font-size:0.6rem;color:#555;">ANALYSIS DEPTH</label>
+                                    <div class="text-blue" style="font-size:1.5rem;font-weight:bold;color:#00ccff;">50+ FEATS</div>
+                                    <div class="text-dim" style="font-size:0.7rem;">ENSEMBLE_V2_ACTIVE</div>
+                                </div>
                             </div>
-                            <div class="expert-system border-box">
-                                <div class="box-header text-green">
-                                    <i class="fa-solid fa-robot"></i> AI_EXPERT_SYSTEM <span class="float-right">ONLINE</span>
-                                </div>
-                                <div class="expert-content" id="ai-expert-text">
-                                    <p class="text-dim">@ SYSTEM DIAGNOSTIC</p>
-                                    <p>AWAITING TRANSACTION INPUT FOR ANALYSIS...</p>
+
+                            <div id="ml-insights" style="margin-top:1.5rem;"></div>
+
+                            <div id="ml-simulation" style="margin-top:1.5rem;background:rgba(0,255,0,0.05);border:1px solid #222;padding:1rem;border-radius:4px;">
+                                <h4 style="font-size:0.7rem;color:#00ff00;margin-bottom:0.8rem;letter-spacing:1px;">[ SIMULATION_REPORT ]</h4>
+                                <div id="ml-sim-content">
+                                    <div class="text-dim" style="font-size:0.8rem;">Ready...</div>
                                 </div>
                             </div>
                         </div>
@@ -213,166 +178,108 @@
 
                 <!-- TAB 3: UPLOAD DATA -->
                 <section id="upload" class="tab-content">
-                    <div class="upload-container border-box">
-                        <div class="box-header text-green">
-                            <i class="fa-solid fa-database"></i> INGEST_BULK_DATA
-                        </div>
-                        <div class="drop-zone" id="drop-zone" onclick="document.getElementById('csv-upload').click()">
-                            <i class="fa-solid fa-cloud-arrow-up drop-icon"></i>
-                            <h3>CLICK TO UPLOAD BLOCKCHAIN LEDGER</h3>
-                            <p>SUPPORTED FORMAT: .CSV ONLY</p>
+                    <div class="analyze-container border-box" style="padding:2rem;">
+                        <h3 class="card-title"><span class="text-green">03_</span> INGEST_BULK_DATA</h3>
+                        <div class="drop-zone" onclick="document.getElementById('csv-upload').click()" style="border:2px dashed #222;padding:4rem;text-align:center;margin-top:2rem;cursor:pointer;">
+                            <i class="fa-solid fa-cloud-arrow-up" style="font-size:2rem;color:#222;margin-bottom:1rem;"></i>
+                            <p>CLICK TO UPLOAD .CSV LEDGER</p>
                             <input type="file" id="csv-upload" accept=".csv" style="display:none;">
-                        </div>
-                        <div class="action-right mt-20">
-                            <button class="btn-primary" id="analyze-bulk-btn" onclick="analyzeBulk()"><i class="fa-solid fa-play"></i> ANALYZE BULK DATA</button>
-                        </div>
-                        <div class="results-section mt-20" id="bulk-results" style="display:none;">
-                            <div class="expert-system border-box">
-                                <div class="box-header text-green">
-                                    <i class="fa-solid fa-robot"></i> BULK_ANALYSIS_REPORT
-                                </div>
-                                <div class="expert-content" id="bulk-report-text">
-                                    <!-- Dynamic text -->
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </section>
 
                 <!-- TAB 4: ALERTS -->
                 <section id="alerts" class="tab-content">
-                    <div class="alerts-container border-box">
-                        <div class="box-header text-red">
-                            <i class="fa-solid fa-triangle-exclamation"></i> SYSTEM_INCIDENT_ALERTS
-                            <i class="fa-solid fa-bell float-right text-red"></i>
+                    <div class="analyze-container border-box" style="padding:2rem;">
+                        <h3 class="card-title" style="color:#ff3333;"><span class="text-red">04_</span> SYSTEM_INCIDENT_ALERTS</h3>
+                        <div id="alerts-list" style="margin-top:2rem;">
+                            <p class="text-dim">No recent incidents detected.</p>
                         </div>
-                        
-                        <div id="alerts-list">
-                            <!-- Dynamic Alerts will be injected here -->
-                            <p class="text-dim">@ SYSTEM: Loading incident history...</p>
-                        </div>
-
-                        <div style="display: flex; gap: 15px;">
-                            <button class="btn-outline mt-20" onclick="markAlertsRead()"><i class="fa-solid fa-check-double"></i> MARK AS READ</button>
-                            <button class="btn-outline mt-20 text-red" style="border-color: #440000;" onclick="purgeLogs()"><i class="fa-solid fa-trash-can"></i> PURGE LOGS</button>
+                        <div style="display:flex;gap:1rem;margin-top:2rem;">
+                            <button class="btn-secondary" onclick="markAlertsRead()">MARK_AS_READ</button>
+                            <button class="btn-secondary" onclick="purgeLogs()" style="color:#ff3333;">PURGE_LOGS</button>
                         </div>
                     </div>
                 </section>
 
-                <!-- TAB 5: NETWORK GRAPH -->
+                <!-- TAB 5: NETWORK GRAPH (LIVE) -->
                 <section id="network" class="tab-content">
-                    <div class="network-container border-box">
-                        <div class="box-header text-green">
-                            <i class="fa-solid fa-diagram-project"></i> NEURAL_TRANSACTION_TOPOLOGY
-                            <div class="float-right legend">
-                                <span class="dot-green"></span> NORMAL
-                                <span class="dot-red"></span> SUSPICIOUS
-                            </div>
-                        </div>
-                        <div class="graph-area">
-                            <div id="mynetwork" style="width: 100%; height: 400px; background-color: #050505; border: 1px solid #111;"></div>
-                        </div>
+                    <div class="analyze-container border-box" style="padding:2rem;height:600px;">
+                        <h3 class="card-title"><span class="text-green">05_</span> NEURAL_TRANSACTION_TOPOLOGY</h3>
+                        <p class="text-dim" style="font-size:0.7rem;margin-bottom:1rem;">Visualizing contamination links for current session targets.</p>
+                        <canvas id="network-graph" style="width:100%;height:400px;background:#050505;border:1px solid #111;"></canvas>
                     </div>
                 </section>
 
-                <!-- TAB 6: WALLET SCANNER -->
+                <!-- TAB 6: WALLET SCANNER (LATEST) -->
                 <section id="wallet-scanner" class="tab-content">
-                    <div class="analyze-container border-box" style="border-color:#00ff0033;">
+                    <div class="analyze-container border-box" style="padding:1.5rem;">
                         <div class="box-header text-green">
                             <i class="fa-solid fa-shield-halved"></i> SATA_CORE_WALLET_SCANNER
-                            <span class="float-right" style="color:#00ff0055;font-size:0.7rem;">POWERED BY SATA_CORE AI</span>
+                            <span class="float-right" style="color:#00ff0055;font-size:0.7rem;">AI_ENGINE_V2</span>
                         </div>
-
-                        <!-- Input -->
-                        <div class="form-section">
-                            <h3 class="section-title">ENTER ETHEREUM WALLET ADDRESS</h3>
+                        
+                        <div class="form-section" style="margin-top:1.5rem;">
                             <div class="form-row">
                                 <div class="input-group" style="flex:1;">
                                     <label>WALLET ADDRESS (0x...)</label>
-                                    <input type="text" id="scan-address"
-                                        placeholder="0xABCDEF1234567890..." maxlength="42"
-                                        style="font-family:monospace;letter-spacing:1px;"
-                                        onkeydown="if(event.key==='Enter') scanWallet()">
+                                    <input type="text" id="scan-address" placeholder="0x..." style="font-family:monospace;">
                                 </div>
                             </div>
                             <div class="action-buttons">
-                                <button class="btn-secondary" onclick="document.getElementById('scan-address').value=''">
-                                    <i class="fa-solid fa-rotate-right"></i> CLEAR
-                                </button>
-                                <button class="btn-primary" onclick="scanWallet()" id="scan-btn">
-                                    <i class="fa-solid fa-magnifying-glass"></i> SCAN WALLET
-                                </button>
+                                <button class="btn-primary" onclick="scanWallet()" id="scan-btn" style="width:100%;">SCAN WALLET_</button>
                             </div>
                         </div>
 
-                        <!-- Results -->
-                        <div id="scan-results" style="display:none;margin-top:20px;">
-                            <div class="results-section" style="align-items:flex-start;gap:24px;flex-wrap:wrap;">
+                        <div id="scan-loading" style="display:none;text-align:center;padding:40px;">
+                            <p class="text-green" style="animation:breathe 1s infinite;">> SCANNING BLOCKCHAIN...</p>
+                        </div>
 
+                        <div id="scan-results" style="display:none;margin-top:20px;">
+                            <div style="display:flex;gap:2rem;flex-wrap:wrap;">
                                 <!-- Risk Gauge -->
                                 <div style="display:flex;flex-direction:column;align-items:center;min-width:160px;">
                                     <div class="risk-circle" id="scan-risk-circle">
                                         <span id="scan-risk-score">0</span>
                                     </div>
-                                    <div class="risk-label" style="margin-top:8px;font-size:0.75rem;color:#666;">RISK SCORE /100</div>
-                                    <div id="scan-risk-badge" style="margin-top:10px;padding:4px 16px;border-radius:4px;font-family:monospace;font-size:0.9rem;font-weight:bold;">--</div>
-                                    <!-- Risk Meter Bar -->
-                                    <div class="risk-meter-wrap" style="width:120px;margin-top:14px;">
-                                        <div class="risk-meter-bar" id="scan-meter-bar" style="width:0%;"></div>
+                                    <div id="scan-risk-badge" style="margin-top:1rem;font-weight:bold;">--</div>
+                                    <div class="risk-meter-wrap" style="width:120px;margin-top:1rem;">
+                                        <div class="risk-meter-bar" id="scan-meter-bar"></div>
                                     </div>
                                 </div>
-
-                                <!-- Details Panel -->
-                                <div class="expert-system border-box" style="flex:1;min-width:260px;">
+                                <!-- Report -->
+                                <div class="expert-system border-box" style="flex:1;min-width:300px;">
                                     <div class="box-header text-green">
                                         <i class="fa-solid fa-robot"></i> THREAT_INTELLIGENCE_REPORT
-                                        <span class="float-right" id="scan-timestamp" style="color:#555;font-size:0.7rem;"></span>
+                                        <span class="float-right" id="scan-timestamp" style="font-size:0.7rem;color:#555;"></span>
                                     </div>
-                                    <div class="expert-content" id="scan-flags-list">
-                                        <p class="text-dim">Awaiting scan...</p>
-                                    </div>
-                                    <!-- WHY Box -->
-                                    <div class="why-box" id="scan-why-box" style="display:none;margin:0 20px 20px;">
-                                        <div class="why-box-title">⚡ WHY IS THIS RISKY?</div>
-                                        <div id="scan-why-content"></div>
-                                        <div class="detail-chips" id="scan-detail-chips"></div>
+                                    <div id="scan-flags-list" style="padding:1rem;"></div>
+                                    <div class="why-box" id="scan-why-box" style="display:none;margin:1rem;padding:1rem;background:#050505;border:1px solid #111;">
+                                        <div style="color:#00ff00;font-size:0.7rem;margin-bottom:0.5rem;">⚡ WHY IS THIS RISKY?</div>
+                                        <div id="scan-why-content" style="font-size:0.85rem;"></div>
+                                        <div id="scan-detail-chips" style="display:flex;gap:5px;flex-wrap:wrap;margin-top:1rem;"></div>
                                     </div>
                                 </div>
                             </div>
-
-                            <!-- Wallet Stats -->
-                            <div class="metrics-row" style="margin-top:16px;" id="scan-stats-row">
-                                <div class="metric-box border-green">
+                            <!-- Stats -->
+                            <div class="metrics-row" style="margin-top:1rem;">
+                                <div class="metric-box">
                                     <div class="metric-title">TOTAL TXs</div>
-                                    <div class="metric-value"><i class="fa-solid fa-right-left"></i> <span id="stat-txcount">-</span></div>
+                                    <div class="metric-value" id="stat-txcount">-</div>
                                 </div>
-                                <div class="metric-box border-yellow">
+                                <div class="metric-box">
                                     <div class="metric-title">WALLET AGE</div>
-                                    <div class="metric-value text-yellow"><i class="fa-regular fa-clock"></i> <span id="stat-age">-</span></div>
+                                    <div class="metric-value text-yellow" id="stat-age">-</div>
                                 </div>
-                                <div class="metric-box border-green">
+                                <div class="metric-box">
                                     <div class="metric-title">ETH BALANCE</div>
-                                    <div class="metric-value"><i class="fa-brands fa-ethereum"></i> <span id="stat-balance">-</span></div>
+                                    <div class="metric-value" id="stat-balance">-</div>
                                 </div>
-                                <div class="metric-box border-red">
+                                <div class="metric-box">
                                     <div class="metric-title">TOKEN TXs</div>
-                                    <div class="metric-value text-red"><i class="fa-solid fa-coins"></i> <span id="stat-tokens">-</span></div>
+                                    <div class="metric-value text-red" id="stat-tokens">-</div>
                                 </div>
                             </div>
-                        </div>
-
-                        <!-- Scanning Animation -->
-                        <div id="scan-loading" style="display:none;text-align:center;padding:40px;">
-                            <div style="font-family:monospace;color:#00ff00;font-size:1rem;animation:breathe 1s infinite;">
-                                > SCANNING BLOCKCHAIN...<br>
-                                <span style="color:#555;font-size:0.8rem;">Querying Etherscan â€¢ Analysing 8 fraud signals â€¢ Building risk profile</span>
-                            </div>
-                        </div>
-
-                        <!-- Recent Scans -->
-                        <div style="margin-top:24px;">
-                            <div class="box-header" style="color:#555;font-size:0.8rem;">RECENT SCANS</div>
-                            <div id="recent-scans-list" style="margin-top:8px;"></div>
                         </div>
                     </div>
                 </section>
