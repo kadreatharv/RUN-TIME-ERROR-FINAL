@@ -55,6 +55,9 @@ function setupTabs() {
         });
     });
 }
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// WALLET SCANNER â€” ChainGuard AI
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
 // Chart.js Initialization
 function initChart() {
@@ -211,10 +214,10 @@ async function runAnalysis() {
     let features = [avgValSent, sentTnx, avgMinBetween, numContracts];
 
     try {
-        const response = await fetch(`${BACKEND_URL}/predict`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ features: features })
+        const res  = await fetch(`${BACKEND_URL}/scan-wallet`, {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ address })
         });
 
         if (!response.ok) throw new Error("API Error");
