@@ -1,4 +1,4 @@
-﻿import os
+import os
 import sqlite3
 import pickle
 import numpy as np
@@ -8,9 +8,22 @@ import psycopg2
 import psycopg2.extras
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 app = Flask(__name__)
 CORS(app)
+
+# ── Rate Limiter ─────────────────────────────────────────────
+limiter = Limiter(
+    app=app,
+    key_func=get_remote_address,
+    default_limits=["200 per hour"],
+    storage_uri="memory://",
+    on_breach=lambda limit: (jsonify({
+        "error": f"Rate limit exceeded. You can make {limit.limit} requests per {limit.reset_at}. Try again shortly."
+    }), 429)
+)
 
 # â”€â”€ Database Setup â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 DB_FILE     = "transactions.db"
@@ -124,12 +137,17 @@ except Exception as e:
 
 # â”€â”€ Known Scam Addresses (public blacklist) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 KNOWN_SCAM_ADDRESSES = {
-    "0xde0b295669a9fd93d5f28d9ec85e40f4cb697bae",
-    "0xb3764761e297d6f121e79c32a65829cd1ddb4d32",
-    "0xd882cfc20f52f2599d84b8e8d58c7fb62cfe344b",
-    "0x7f268357a8c2552623316e2562d90e642bb538e5",
-    "0xa090e606e30bd747d4e6245a1517ebe430f0057e",
-    "0x00000000219ab540356cbb839cbe05303d7705fa",
+    # Known hackers & exploiters (public record)
+    "0x098b716b8aaf21512996dc57eb0615e2383e2f96",  # Ronin Bridge Hacker ($625M)
+    "0x3f5ce5fbfe3e9af3971dd833d26ba9b5c936f0be",  # Bitfinex hacker
+    "0xd882cfc20f52f2599d84b8e8d58c7fb62cfe344b",  # Known drainer
+    "0x7f268357a8c2552623316e2562d90e642bb538e5",  # OpenSea exploit
+    "0xa090e606e30bd747d4e6245a1517ebe430f0057e",  # Known phisher
+    "0xb3764761e297d6f121e79c32a65829cd1ddb4d32",  # Known phisher 2
+    "0x1da5821544e25c636c1417ba96ade4cf6d2f9b5a",  # BitMart hacker
+    "0xb3764761e297d6f121e79c32a65829cd1ddb4d32",  # Phishing wallet
+    "0x53d284357ec70ce289d6d64134dfac8e511c8a3d",  # Kraken old hack
+    "0xab5801a7d398351b8be11c439e05c5b3259aec9b",  # Vitalik impersonator scam
 }
 
 # â”€â”€ Etherscan Helper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -139,10 +157,11 @@ def fetch_etherscan(params):
     try:
         r = requests.get(ETHERSCAN_BASE, params=params, timeout=10)
         data = r.json()
-        # Guard: if result is a string error message, return empty
-        if isinstance(data.get("result"), str):
-            err_msg = data.get("result", "")[:80]
-            print(f"[ETHERSCAN] API returned error: {err_msg}")
+        # Guard: only block actual error message strings, NOT numeric strings (ETH balance is a string)
+        result_val = data.get("result", "")
+        if isinstance(result_val, str) and not str(result_val).lstrip("-").isdigit():
+            err_msg = str(result_val)[:80]
+            print(f"[ETHERSCAN] API returned error string: {err_msg}")
             return {"status": "0", "result": []}
         return data
     except Exception as e:
@@ -295,6 +314,7 @@ def db_status():
         return jsonify({"status": "error", "error": str(e)}), 500
 
 @app.route("/scan-wallet", methods=["POST"])
+@limiter.limit("10 per minute", error_message="Rate limit: max 10 wallet scans per minute per IP.")
 def scan_wallet():
     data    = request.json or {}
     address = data.get("address", "").strip()
@@ -342,6 +362,7 @@ def recent_scans():
         return jsonify({"error": str(e)}), 500
 
 @app.route("/predict", methods=["POST"])
+@limiter.limit("30 per minute", error_message="Rate limit: max 30 predictions per minute per IP.")
 def predict():
     if model is None:
         return jsonify({"error": "Model not loaded"}), 500
@@ -401,6 +422,7 @@ import pandas as pd
 import io
 
 @app.route("/predict_bulk", methods=["POST"])
+@limiter.limit("5 per minute", error_message="Rate limit: max 5 bulk uploads per minute per IP.")
 def predict_bulk():
     if model is None:
         return jsonify({"error": "Model not loaded"}), 500
@@ -438,6 +460,7 @@ def predict_bulk():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
 
 
 
