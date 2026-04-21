@@ -1,4 +1,4 @@
-﻿// Live Render Backend API
+// Live Render Backend API
 const BACKEND_URL = "https://run-time-error-final.onrender.com";
 
 let trafficChart;
@@ -486,7 +486,7 @@ async function scanWallet() {
         renderScanResult(data);
         loadRecentScans();
     } catch (err) {
-        alert('Connection error â€” backend unreachable.');
+        alert('Connection error — backend unreachable.');
     } finally {
         document.getElementById('scan-loading').style.display = 'none';
         document.getElementById('scan-btn').disabled          = false;
@@ -496,10 +496,14 @@ async function scanWallet() {
 
 function renderScanResult(data) {
     document.getElementById('scan-results').style.display = 'block';
+
+    // ── Risk Circle ──────────────────────────────────────────
     const circle = document.getElementById('scan-risk-circle');
     document.getElementById('scan-risk-score').innerText = data.risk_score;
     circle.className = 'risk-circle';
     circle.classList.add(data.risk_score >= 40 ? 'high-risk' : 'low-risk');
+
+    // ── Risk Badge ───────────────────────────────────────────
     const colors = { CRITICAL: '#ff3333', HIGH: '#ff7700', MEDIUM: '#ffcc00', LOW: '#00ff00' };
     const col    = colors[data.risk_level] || '#fff';
     const badge  = document.getElementById('scan-risk-badge');
@@ -507,20 +511,83 @@ function renderScanResult(data) {
     badge.style.color      = col;
     badge.style.border     = '1px solid ' + col;
     badge.style.background = col + '11';
+
+    // ── Animated Risk Meter Bar ──────────────────────────────
+    const bar = document.getElementById('scan-meter-bar');
+    const meterColor = data.risk_score >= 70 ? '#ff3333' : data.risk_score >= 40 ? '#ff7700' : data.risk_score >= 20 ? '#ffcc00' : '#00ff00';
+    bar.style.background = meterColor;
+    bar.style.boxShadow  = `0 0 8px ${meterColor}`;
+    setTimeout(() => { bar.style.width = data.risk_score + '%'; }, 100);
+
+    // ── Flag Cards (WHY explanation) ─────────────────────────
     const flagsDiv = document.getElementById('scan-flags-list');
     if (data.flags && data.flags.length) {
-        flagsDiv.innerHTML = data.flags.map(function(f) {
-            var good = f.toLowerCase().includes('no major') || f.toLowerCase().includes('safe');
-            return '<p class="' + (good ? 'text-green' : 'text-red') + '">> ' + f + '</p>';
+        flagsDiv.innerHTML = data.flags.map(function(f, i) {
+            const isOk       = f.toLowerCase().includes('no major') || f.toLowerCase().includes('safe');
+            const isCritical = f.toLowerCase().includes('blacklist') || f.toLowerCase().includes('scam') ||
+                               f.toLowerCase().includes('drainer') || f.toLowerCase().includes('critical');
+            const cls  = isOk ? 'flag-ok' : (isCritical ? 'flag-critical' : 'flag-warning');
+            const icon = isOk ? '✅' : (isCritical ? '🔴' : '⚠️');
+            const lbl  = isOk ? 'SAFE' : (isCritical ? 'CRITICAL RISK' : 'WARNING');
+            return `<div class="flag-card ${cls}" style="animation-delay:${i * 0.07}s">
+                        <div class="flag-icon">${icon}</div>
+                        <div class="flag-text">
+                            <div class="flag-label">${lbl}</div>
+                            <div>${f}</div>
+                        </div>
+                    </div>`;
         }).join('');
     } else {
-        flagsDiv.innerHTML = '<p class="text-green">> No red flags detected.</p>';
+        flagsDiv.innerHTML = '<div class="flag-card flag-ok"><div class="flag-icon">✅</div><div class="flag-text"><div class="flag-label">SAFE</div><div>No red flags detected — wallet appears clean.</div></div></div>';
     }
+
+    // ── WHY IS THIS RISKY? box ───────────────────────────────
+    const whyBox     = document.getElementById('scan-why-box');
+    const whyContent = document.getElementById('scan-why-content');
+    const chips      = document.getElementById('scan-detail-chips');
+    whyBox.style.display = 'block';
+
+    const reasons = [];
+    const d = data.wallet_data || {};
+    if (data.wallet_age_days !== undefined && data.wallet_age_days < 7)
+        reasons.push(`🕐 Wallet is only <b>${data.wallet_age_days} day(s) old</b> — new wallets carry much higher risk.`);
+    else if (data.wallet_age_days !== undefined && data.wallet_age_days < 30)
+        reasons.push(`🕐 Wallet is <b>${data.wallet_age_days} days old</b> — relatively new, proceed with caution.`);
+    if (data.tx_count !== undefined && data.tx_count < 5)
+        reasons.push(`📉 Only <b>${data.tx_count} transactions</b> on record — very little on-chain history.`);
+    if (d.failed_tx_ratio !== undefined && d.failed_tx_ratio > 30)
+        reasons.push(`❌ <b>${d.failed_tx_ratio}% of transactions failed</b> — common pattern in bots and scammers.`);
+    if ((data.flags || []).some(f => f.toLowerCase().includes('scam')))
+        reasons.push(`🔗 This wallet has <b>interacted with known scam addresses</b> — high contamination risk.`);
+    if ((data.flags || []).some(f => f.toLowerCase().includes('blacklist')))
+        reasons.push(`🚫 Address is on a <b>public scam blacklist</b> — associated with confirmed fraud cases.`);
+    if ((data.flags || []).some(f => f.toLowerCase().includes('drainer')))
+        reasons.push(`🚨 Exhibits <b>drainer pattern</b> — sends far more than it receives, typical of fund draining wallets.`);
+    if (data.eth_balance === 0)
+        reasons.push(`💸 <b>Zero ETH balance</b> — wallet may be drained or a throwaway address.`);
+
+    if (reasons.length === 0 && data.risk_score < 20) {
+        whyContent.innerHTML = '<p style="color:#00ff00;">✅ No major risk factors found. This wallet appears safe based on all 8 signals.</p>';
+    } else {
+        whyContent.innerHTML = reasons.map(r => `<p style="margin-bottom:6px;">› ${r}</p>`).join('');
+    }
+
+    // ── Detail Chips ─────────────────────────────────────────
+    chips.innerHTML = [
+        { label: 'Sent TXs',     val: d.sent_count     != null ? d.sent_count     : '—' },
+        { label: 'Recv TXs',     val: d.received_count != null ? d.received_count : '—' },
+        { label: 'Contracts',    val: d.contracts_created != null ? d.contracts_created : '—' },
+        { label: 'Token TXs',   val: d.token_tx_count  != null ? d.token_tx_count  : '—' },
+        { label: 'Fail Rate',    val: d.failed_tx_ratio != null ? d.failed_tx_ratio + '%' : '—' },
+    ].map(c => `<div class="chip">${c.label}<span>${c.val}</span></div>`).join('');
+
+    // ── Stat Cards ───────────────────────────────────────────
     document.getElementById('stat-txcount').innerText = data.tx_count != null ? data.tx_count : '-';
     document.getElementById('stat-age').innerText     = data.wallet_age_days != null ? data.wallet_age_days + ' days' : '-';
     document.getElementById('stat-balance').innerText = data.eth_balance != null ? data.eth_balance + ' ETH' : '-';
-    document.getElementById('stat-tokens').innerText  = (data.wallet_data && data.wallet_data.token_tx_count != null) ? data.wallet_data.token_tx_count : '-';
+    document.getElementById('stat-tokens').innerText  = d.token_tx_count != null ? d.token_tx_count : '-';
     document.getElementById('scan-timestamp').innerText = data.scanned_at || '';
+
     addLog('> SCAN: ' + data.address.slice(0,10) + '... Risk: ' + data.risk_level + ' (' + data.risk_score + '/100)',
            data.risk_score >= 40 ? 'red' : 'green');
 }
@@ -545,4 +612,33 @@ async function loadRecentScans() {
         }).join('');
     } catch(e) {}
 }
+
+// ═══════════════════════════════════════════════════════
+// MOBILE — Hamburger Sidebar Toggle
+// ═══════════════════════════════════════════════════════
+function toggleSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    const isOpen  = sidebar.classList.contains('open');
+    if (isOpen) {
+        sidebar.classList.remove('open');
+        overlay.classList.remove('active');
+    } else {
+        sidebar.classList.add('open');
+        overlay.classList.add('active');
+    }
+}
+
+function closeSidebar() {
+    document.querySelector('.sidebar').classList.remove('open');
+    document.getElementById('sidebar-overlay').classList.remove('active');
+}
+
+// Close sidebar when a nav button is clicked on mobile
+document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        if (window.innerWidth <= 900) closeSidebar();
+    });
+});
+
 

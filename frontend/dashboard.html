@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -16,6 +16,8 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <!-- Mobile sidebar overlay -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
     <div class="terminal-container">
         <!-- Sidebar -->
         <aside class="sidebar">
@@ -58,9 +60,14 @@
         <!-- Main Content -->
         <main class="main-content">
             <header class="top-header">
-                <div class="title-group">
-                    <h2>BLOCKCHAIN FRAUD DETECTION</h2>
-                    <p>AI.CORE_V2 // ACTIVE MONITORING</p>
+                <div style="display:flex;align-items:center;gap:16px;">
+                    <button class="hamburger-btn" id="hamburger-btn" onclick="toggleSidebar()">
+                        <i class="fa-solid fa-bars"></i> MENU
+                    </button>
+                    <div class="title-group">
+                        <h2>BLOCKCHAIN FRAUD DETECTION</h2>
+                        <p>AI.CORE_V2 // ACTIVE MONITORING</p>
+                    </div>
                 </div>
                 <div class="user-badge">SATA_CORE</div>
             </header>
@@ -307,8 +314,12 @@
                                     <div class="risk-circle" id="scan-risk-circle">
                                         <span id="scan-risk-score">0</span>
                                     </div>
-                                    <div class="risk-label">RISK SCORE</div>
+                                    <div class="risk-label" style="margin-top:8px;font-size:0.75rem;color:#666;">RISK SCORE /100</div>
                                     <div id="scan-risk-badge" style="margin-top:10px;padding:4px 16px;border-radius:4px;font-family:monospace;font-size:0.9rem;font-weight:bold;">--</div>
+                                    <!-- Risk Meter Bar -->
+                                    <div class="risk-meter-wrap" style="width:120px;margin-top:14px;">
+                                        <div class="risk-meter-bar" id="scan-meter-bar" style="width:0%;"></div>
+                                    </div>
                                 </div>
 
                                 <!-- Details Panel -->
@@ -319,6 +330,12 @@
                                     </div>
                                     <div class="expert-content" id="scan-flags-list">
                                         <p class="text-dim">Awaiting scan...</p>
+                                    </div>
+                                    <!-- WHY Box -->
+                                    <div class="why-box" id="scan-why-box" style="display:none;margin:0 20px 20px;">
+                                        <div class="why-box-title">⚡ WHY IS THIS RISKY?</div>
+                                        <div id="scan-why-content"></div>
+                                        <div class="detail-chips" id="scan-detail-chips"></div>
                                     </div>
                                 </div>
                             </div>
