@@ -205,8 +205,8 @@ def calculate_risk_score(address):
         # Time Gap Analysis (Volatility)
         timestamps = [int(t.get("timeStamp", 0)) for t in txs]
         gaps = [timestamps[i] - timestamps[i+1] for i in range(len(timestamps)-1)]
-        avg_gap = np.mean(gaps) if gaps else 0
-        std_gap = np.std(gaps) if gaps else 0
+        avg_gap = float(np.mean(gaps)) if gaps else 0.0
+        std_gap = float(np.std(gaps)) if gaps else 0.0
         data["avg_tx_gap_sec"] = int(avg_gap)
         
         # Anomaly: Very high frequency (Bot behavior)
@@ -216,7 +216,7 @@ def calculate_risk_score(address):
 
         # Signal 4: Gas Price Anomalies
         gas_prices = [int(t.get("gasPrice", 0)) for t in txs[:50]]
-        avg_gas = np.mean(gas_prices) if gas_prices else 0
+        avg_gas = float(np.mean(gas_prices)) if gas_prices else 0.0
         data["avg_gas_price_gwei"] = round(avg_gas / 1e9, 2)
         if any(p > avg_gas * 5 for p in gas_prices):
             flags.append("Gas price anomalies (Suspicious rush transactions)")
@@ -261,11 +261,13 @@ def calculate_risk_score(address):
     if model:
         # Map our features to model format: [avg_val_sent, sent_tnx, avg_min_between_sent_tnx, num_contracts]
         # (Simulating extraction for the ensemble)
-        ml_features = np.array([eth_balance, sent_count, (avg_gap/60 if 'avg_gap' in locals() else 0), unique_contracts]).reshape(1,-1)
-        ml_prob = model.predict_proba(ml_features)[0][1] * 100
+        ml_features = np.array([float(eth_balance), float(sent_count), float(avg_gap/60 if 'avg_gap' in locals() else 0), float(unique_contracts)]).reshape(1,-1)
+        ml_prob = float(model.predict_proba(ml_features)[0][1]) * 100
         # Ensemble: 60% Heuristics + 40% ML Probability
-        score = (score * 0.6) + (ml_prob * 0.4)
+        score = (float(score) * 0.6) + (ml_prob * 0.4)
         data["ml_engine_confidence"] = round(ml_prob, 2)
+
+    score = float(score)
 
 
     # False-positive dampening for established wallets
