@@ -5,8 +5,10 @@ let trafficChart;
 let networkGraph;
 let isBackendConnected = true;
 let currentChartRange = '30D';
-let purgedUpToId = -1;
-let readUpToId = -1;
+
+// Persistence for alerts using localStorage
+let purgedUpToId = parseInt(localStorage.getItem('purgedUpToId')) || -1;
+let readUpToId = parseInt(localStorage.getItem('readUpToId')) || -1;
 let currentMaxId = -1;
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -351,6 +353,7 @@ document.getElementById('csv-upload').addEventListener('change', function(e) {
 // Alert Controls
 function markAlertsRead() {
     readUpToId = currentMaxId;
+    localStorage.setItem('readUpToId', readUpToId);
     const badge = document.getElementById('alert-badge');
     if(badge) {
         badge.innerText = '0';
@@ -361,6 +364,8 @@ function markAlertsRead() {
 function purgeLogs() {
     purgedUpToId = currentMaxId;
     readUpToId = currentMaxId;
+    localStorage.setItem('purgedUpToId', purgedUpToId);
+    localStorage.setItem('readUpToId', readUpToId);
     document.getElementById('alerts-list').innerHTML = '<p class="text-green">> All systems normal. Logs purged.</p>';
     const badge = document.getElementById('alert-badge');
     if(badge) {
