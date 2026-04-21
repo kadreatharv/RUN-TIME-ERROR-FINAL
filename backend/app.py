@@ -249,7 +249,7 @@ def calculate_risk_score(address):
     tok = fetch_etherscan({"module": "account", "action": "tokentx",
                             "address": address, "startblock": 0,
                             "endblock": 99999999, "sort": "desc",
-                            "offset": 50, "page": 1})
+                            "offset": 10000, "page": 1})
     token_txs = tok.get("result", []) or []
     data["token_tx_count"] = len(token_txs) if isinstance(token_txs, list) else 0
     if isinstance(token_txs, list) and len(token_txs) > 30:
@@ -263,6 +263,20 @@ def calculate_risk_score(address):
         if len(contracts) > 3:
             flags.append(f"Created {len(contracts)} contracts - verify legitimacy")
             score += 10
+
+    # False-positive dampening for established wallets
+    # Very old wallets (>2 years) with high balance and high tx count
+    # are very unlikely to be scams — reduce score to avoid false HIGH
+    is_established = (
+        wallet_age_days > 730 and
+        eth_balance > 100 and
+        tx_count > 500
+    )
+    if is_established:
+        # Cap scam-interaction penalty — established wallets interact with
+        # many addresses, false positives are common with small blacklists
+        score = min(score, 35)
+        flags.append("NOTE: Established wallet (old + high balance + high activity) — scam interaction may be incidental")
 
     # Final score
     score = min(score, 100)

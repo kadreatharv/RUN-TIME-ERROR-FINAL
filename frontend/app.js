@@ -592,6 +592,10 @@ function renderScanResult(data) {
     if (flags.some(f => f.toLowerCase().includes('created') && f.toLowerCase().includes('contract')))
         reasons.push(`📝 <b>Multiple contracts deployed</b> from this wallet — verify legitimacy of each contract.`);
 
+    // Established wallet note
+    if (flags.some(f => f.toLowerCase().includes('note: established')))
+        reasons.push(`🏛️ <b>Established wallet detected</b> — this wallet is old, has high balance and high activity. Any scam-address interaction may be incidental (false positive risk with small blacklists).`);
+
     if (reasons.length === 0) {
         whyContent.innerHTML = '<p style="color:#00ff00;">✅ All 8 risk signals checked — no red flags found. This wallet appears clean.</p>';
     } else {
