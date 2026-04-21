@@ -6,3 +6,4 @@ numpy
 gunicorn
 psycopg2-binary
 requests
+Flask-Limiter==3.8.0
